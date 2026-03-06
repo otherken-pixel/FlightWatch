@@ -2,10 +2,30 @@ import { useState } from 'react';
 import useStore from '../store/useStore';
 import { requestNotificationPermission } from '../utils/notifications';
 
-function Section({ title, children }) {
+function MdIcon({ name, style }) {
+  return <span className="material-symbols-rounded" style={style}>{name}</span>;
+}
+
+function Section({ title, icon, children }) {
   return (
-    <div className="bg-navy-mid/50 rounded-xl border border-navy-light p-4 mb-4">
-      <h3 className="font-display text-sm font-semibold text-amber uppercase tracking-wider mb-3">{title}</h3>
+    <div
+      className="mb-4 fade-in"
+      style={{
+        background: 'var(--color-card)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 20,
+        padding: '18px 20px',
+        boxShadow: '0 2px 16px rgba(0,0,0,0.35)',
+      }}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        {icon && (
+          <div className="flex items-center justify-center" style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--color-accent-dim)' }}>
+            <MdIcon name={icon} style={{ fontSize: 16, color: 'var(--color-accent)' }} />
+          </div>
+        )}
+        <h3 className="fy-section-label" style={{ margin: 0 }}>{title}</h3>
+      </div>
       {children}
     </div>
   );
@@ -14,13 +34,20 @@ function Section({ title, children }) {
 function Input({ label, value, onChange, placeholder, type = 'text' }) {
   return (
     <label className="block mb-3">
-      <span className="text-xs text-sky-dim uppercase tracking-wider">{label}</span>
+      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)', letterSpacing: '0.8px' }}>{label}</span>
       <input
         type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="mt-1 w-full bg-navy border border-navy-light rounded-lg px-3 py-2 text-sm text-sky placeholder-sky-dim/50 focus:outline-none focus:ring-1 focus:ring-amber/50 focus:border-amber/50"
+        className="mt-1 w-full px-3 py-2.5 text-sm outline-none"
+        style={{
+          background: 'var(--color-card-mid)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 12,
+          color: 'var(--color-text-primary)',
+          fontFamily: 'inherit',
+        }}
       />
     </label>
   );
@@ -28,14 +55,22 @@ function Input({ label, value, onChange, placeholder, type = 'text' }) {
 
 function Toggle({ label, checked, onChange }) {
   return (
-    <label className="flex items-center justify-between py-2 cursor-pointer">
-      <span className="text-sm text-sky">{label}</span>
+    <label className="flex items-center justify-between py-2.5 cursor-pointer" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <span className="text-sm" style={{ color: 'var(--color-text-primary)' }}>{label}</span>
       <button
         type="button"
         onClick={() => onChange(!checked)}
-        className={`relative w-10 h-5 rounded-full transition-colors ${checked ? 'bg-amber' : 'bg-navy-light'}`}
+        className="relative transition-colors"
+        style={{
+          width: 44, height: 24, borderRadius: 99,
+          background: checked ? 'var(--color-accent)' : 'var(--color-card-high)',
+          boxShadow: checked ? '0 0 10px rgba(10,132,255,0.3)' : 'none',
+        }}
       >
-        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${checked ? 'translate-x-5' : ''}`} />
+        <span
+          className="absolute top-0.5 left-0.5 rounded-full bg-white transition-transform"
+          style={{ width: 20, height: 20, transform: checked ? 'translateX(20px)' : 'translateX(0)' }}
+        />
       </button>
     </label>
   );
@@ -58,7 +93,6 @@ export default function Settings() {
   const [newIcao, setNewIcao] = useState('');
   const [newNickname, setNewNickname] = useState('');
   const [newType, setNewType] = useState('');
-  const [editingId, setEditingId] = useState(null);
 
   const handleAddAircraft = () => {
     if (!newTail.trim()) return;
@@ -84,49 +118,67 @@ export default function Settings() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-2xl mx-auto p-4 pb-20 md:pb-8">
-        <h1 className="font-display text-2xl font-bold text-sky mb-6">Settings</h1>
+      <div className="max-w-2xl mx-auto p-5 pb-20 md:pb-8">
+        <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.3px' }}>Settings</h1>
 
         {/* Add Aircraft */}
-        <Section title="Add Aircraft">
+        <Section title="Add Aircraft" icon="add_circle">
           <Input label="Tail Number *" value={newTail} onChange={setNewTail} placeholder="N12345" />
           <Input label="ICAO24 Hex Code" value={newIcao} onChange={setNewIcao} placeholder="a1b2c3 (required for tracking)" />
           <Input label="Nickname" value={newNickname} onChange={setNewNickname} placeholder="Dad's Cessna" />
           <Input label="Aircraft Type" value={newType} onChange={setNewType} placeholder="Cessna 172" />
-          <p className="text-xs text-sky-dim mb-3">
+          <p className="text-xs mb-3" style={{ color: 'var(--color-text-tertiary)' }}>
             Find ICAO24 hex codes at{' '}
-            <a href="https://opensky-network.org/aircraft-database" target="_blank" rel="noopener" className="text-amber hover:underline">
+            <a href="https://opensky-network.org/aircraft-database" target="_blank" rel="noopener"
+              style={{ color: 'var(--color-accent)' }}
+            >
               OpenSky Aircraft Database
             </a>
           </p>
           <button
             onClick={handleAddAircraft}
             disabled={!newTail.trim()}
-            className="w-full py-2.5 bg-amber text-navy rounded-lg font-display font-semibold text-sm hover:bg-amber-light transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full py-2.5 text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{
+              background: 'var(--color-accent)',
+              color: '#fff',
+              borderRadius: 12,
+              border: 'none',
+              boxShadow: '0 4px 18px rgba(10,132,255,0.4)',
+            }}
           >
             Add Aircraft
           </button>
         </Section>
 
         {/* Tracked Aircraft */}
-        <Section title={`Tracked Aircraft (${aircraft.length})`}>
+        <Section title={`Tracked Aircraft (${aircraft.length})`} icon="flight">
           {aircraft.length === 0 ? (
-            <p className="text-sm text-sky-dim">No aircraft tracked yet.</p>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>No aircraft tracked yet.</p>
           ) : (
             <div className="space-y-2">
               {aircraft.map(ac => (
-                <div key={ac.id} className="flex items-center gap-3 p-3 bg-navy rounded-lg border border-navy-light">
+                <div
+                  key={ac.id}
+                  className="flex items-center gap-3 p-3"
+                  style={{
+                    background: 'var(--color-card-mid)',
+                    borderRadius: 14,
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
                   <span className="text-xl">{ac.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="font-display font-semibold text-sky text-sm truncate">{ac.nickname}</div>
-                    <div className="text-xs text-sky-dim">{ac.tailNumber} · {ac.icao24 || 'No ICAO24'}</div>
+                    <div className="font-semibold text-sm truncate" style={{ color: 'var(--color-text-primary)' }}>{ac.nickname}</div>
+                    <div className="text-xs font-mono" style={{ color: 'var(--color-text-tertiary)' }}>{ac.tailNumber} · {ac.icao24 || 'No ICAO24'}</div>
                   </div>
                   <button
                     onClick={() => removeAircraft(ac.id)}
-                    className="text-sky-dim hover:text-danger text-lg px-2 transition-colors"
+                    className="transition-colors px-2"
+                    style={{ color: 'var(--color-text-tertiary)', border: 'none', background: 'none' }}
                     title="Remove aircraft"
                   >
-                    ×
+                    <MdIcon name="delete" style={{ fontSize: 18 }} />
                   </button>
                 </div>
               ))}
@@ -135,10 +187,16 @@ export default function Settings() {
         </Section>
 
         {/* Notifications */}
-        <Section title="Notifications">
+        <Section title="Notifications" icon="notifications">
           <button
             onClick={handleEnableNotifications}
-            className="w-full py-2 mb-3 bg-navy-light text-sky rounded-lg text-sm hover:bg-navy-light/80 transition-colors"
+            className="w-full py-2.5 mb-3 text-sm font-medium transition-colors"
+            style={{
+              background: 'var(--color-card-high)',
+              color: 'var(--color-text-primary)',
+              borderRadius: 12,
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
           >
             Enable Browser Notifications
           </button>
@@ -149,8 +207,8 @@ export default function Settings() {
         </Section>
 
         {/* API Keys */}
-        <Section title="API Keys">
-          <p className="text-xs text-sky-dim mb-3">
+        <Section title="API Keys" icon="key">
+          <p className="text-xs mb-3" style={{ color: 'var(--color-text-tertiary)' }}>
             API keys are stored locally in your browser and never sent to any server except the respective API providers.
           </p>
           <Input
@@ -168,19 +226,22 @@ export default function Settings() {
         </Section>
 
         {/* Display Settings */}
-        <Section title="Display">
-          <div className="mb-3">
-            <span className="text-xs text-sky-dim uppercase tracking-wider">Map Style</span>
-            <div className="flex gap-2 mt-1">
+        <Section title="Display" icon="palette">
+          <div className="mb-4">
+            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)', letterSpacing: '0.8px' }}>Map Style</span>
+            <div className="flex gap-2 mt-2">
               {['dark', 'light'].map(style => (
                 <button
                   key={style}
                   onClick={() => updateSettings({ mapStyle: style })}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                    settings.mapStyle === style
-                      ? 'bg-amber text-navy'
-                      : 'bg-navy-light text-sky-dim hover:text-sky'
-                  }`}
+                  className="flex-1 py-2.5 text-sm font-semibold capitalize transition-all"
+                  style={{
+                    borderRadius: 12,
+                    background: settings.mapStyle === style ? 'var(--color-accent)' : 'var(--color-card-high)',
+                    color: settings.mapStyle === style ? '#fff' : 'var(--color-text-secondary)',
+                    border: settings.mapStyle === style ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: settings.mapStyle === style ? '0 4px 12px rgba(10,132,255,0.3)' : 'none',
+                  }}
                 >
                   {style}
                 </button>
@@ -188,8 +249,8 @@ export default function Settings() {
             </div>
           </div>
           <div>
-            <span className="text-xs text-sky-dim uppercase tracking-wider">Poll Interval</span>
-            <div className="flex gap-2 mt-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)', letterSpacing: '0.8px' }}>Poll Interval</span>
+            <div className="flex gap-2 mt-2">
               {[
                 { value: 5000, label: '5s' },
                 { value: 10000, label: '10s' },
@@ -199,11 +260,14 @@ export default function Settings() {
                 <button
                   key={opt.value}
                   onClick={() => updateSettings({ pollInterval: opt.value })}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    settings.pollInterval === opt.value
-                      ? 'bg-amber text-navy'
-                      : 'bg-navy-light text-sky-dim hover:text-sky'
-                  }`}
+                  className="flex-1 py-2.5 text-sm font-semibold transition-all"
+                  style={{
+                    borderRadius: 12,
+                    background: settings.pollInterval === opt.value ? 'var(--color-accent)' : 'var(--color-card-high)',
+                    color: settings.pollInterval === opt.value ? '#fff' : 'var(--color-text-secondary)',
+                    border: settings.pollInterval === opt.value ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: settings.pollInterval === opt.value ? '0 4px 12px rgba(10,132,255,0.3)' : 'none',
+                  }}
                 >
                   {opt.label}
                 </button>

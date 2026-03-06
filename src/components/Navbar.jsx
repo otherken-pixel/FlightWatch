@@ -1,19 +1,43 @@
 import { NavLink } from 'react-router-dom';
 
 const links = [
-  { to: '/', icon: '🗺️', label: 'Map' },
-  { to: '/history', icon: '📋', label: 'History' },
-  { to: '/settings', icon: '⚙️', label: 'Settings' },
+  { to: '/', icon: 'map', label: 'Map' },
+  { to: '/history', icon: 'history', label: 'History' },
+  { to: '/settings', icon: 'settings', label: 'Settings' },
 ];
+
+function MdIcon({ name, style, className = '' }) {
+  return <span className={`material-symbols-rounded ${className}`} style={style}>{name}</span>;
+}
 
 export default function Navbar() {
   return (
     <>
-      {/* Desktop top bar */}
-      <header className="hidden md:flex items-center justify-between px-6 py-3 bg-navy border-b border-navy-light z-50">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">✈️</span>
-          <h1 className="font-display text-xl font-bold text-amber tracking-wide">FlightWatch</h1>
+      {/* Desktop frosted glass header */}
+      <header
+        className="hidden md:flex items-center justify-between px-5 z-50 shrink-0"
+        style={{
+          height: 56,
+          background: 'rgba(10,10,15,0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: 34, height: 34, borderRadius: 10,
+              background: 'var(--color-accent)',
+              boxShadow: '0 0 20px rgba(10,132,255,0.35)',
+            }}
+          >
+            <MdIcon name="flight" style={{ fontSize: 20, color: '#fff' }} />
+          </div>
+          <span style={{ fontWeight: 800, fontSize: 18, letterSpacing: '-0.3px', color: 'var(--color-text-primary)' }}>
+            FlightWatch
+          </span>
         </div>
         <nav className="flex items-center gap-1">
           {links.map(link => (
@@ -21,32 +45,63 @@ export default function Navbar() {
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive ? 'bg-navy-light text-amber' : 'text-sky-dim hover:text-sky hover:bg-navy-light/50'
+                `flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-150 ${
+                  isActive
+                    ? 'text-accent'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`
               }
+              style={({ isActive }) => ({
+                borderRadius: 10,
+                background: isActive ? 'var(--color-accent-dim)' : 'none',
+                border: isActive ? '1px solid rgba(10,132,255,0.3)' : '1px solid transparent',
+              })}
             >
-              <span>{link.icon}</span>
+              <MdIcon name={link.icon} style={{ fontSize: 18 }} />
               {link.label}
             </NavLink>
           ))}
         </nav>
       </header>
 
-      {/* Mobile bottom bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-navy border-t border-navy-light z-50 flex">
+      {/* Mobile bottom nav — frosted glass */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center"
+        style={{
+          height: 60,
+          background: 'rgba(10,10,15,0.92)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        }}
+      >
         {links.map(link => (
           <NavLink
             key={link.to}
             to={link.to}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center gap-0.5 py-2.5 text-xs transition-colors ${
-                isActive ? 'text-amber' : 'text-sky-dim'
+              `flex flex-col items-center gap-1 py-2 text-[10px] font-semibold transition-colors ${
+                isActive ? 'text-accent' : 'text-text-tertiary'
               }`
             }
+            style={{ letterSpacing: '0.3px' }}
           >
-            <span className="text-lg">{link.icon}</span>
-            {link.label}
+            {({ isActive }) => (
+              <>
+                <div
+                  className="flex items-center justify-center"
+                  style={{
+                    width: 36, height: 32, borderRadius: 10,
+                    background: isActive ? 'var(--color-accent-dim)' : 'transparent',
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  <MdIcon name={link.icon} style={{ fontSize: 22 }} />
+                </div>
+                {link.label}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
