@@ -12,7 +12,7 @@ export default function App() {
   usePoller();
 
   return (
-    <div className="h-full flex flex-col bg-navy">
+    <div className="h-full flex flex-col" style={{ background: 'var(--color-bg-elevated)' }}>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />

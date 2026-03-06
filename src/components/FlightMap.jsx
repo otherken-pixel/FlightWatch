@@ -5,7 +5,7 @@ import useStore from '../store/useStore';
 import { metersToFeet, msToKnots } from '../utils/api';
 
 // Create a rotatable plane icon
-function createPlaneIcon(heading = 0, color = '#f5a623') {
+function createPlaneIcon(heading = 0, color = '#0A84FF') {
   return L.divIcon({
     className: 'plane-marker',
     html: `<div class="plane-icon" style="transform: rotate(${heading || 0}deg); color: ${color};">

@@ -2,19 +2,34 @@ import { useEffect, useState } from 'react';
 import useStore from '../store/useStore';
 import { metersToFeet, msToKnots, msToMph, headingToCompass, formatDuration, reverseGeocode, fetchWeather } from '../utils/api';
 
+function MdIcon({ name, style }) {
+  return <span className="material-symbols-rounded" style={style}>{name}</span>;
+}
+
 function StatusBadge({ status }) {
   const config = {
-    airborne: { color: 'bg-green-500', label: 'Airborne', dot: 'bg-green-400' },
-    taxiing: { color: 'bg-yellow-500', label: 'Taxiing', dot: 'bg-yellow-400' },
-    on_ground: { color: 'bg-gray-500', label: 'On Ground', dot: 'bg-gray-400' },
-    landed: { color: 'bg-green-600', label: 'Landed', dot: 'bg-green-400' },
-    unknown: { color: 'bg-gray-600', label: 'Unknown', dot: 'bg-gray-500' },
+    airborne: { bg: 'rgba(52,199,89,0.15)', color: '#34C759', label: 'Airborne', glow: '0 0 10px rgba(52,199,89,0.3)' },
+    taxiing: { bg: 'rgba(255,149,0,0.15)', color: '#FF9500', label: 'Taxiing', glow: 'none' },
+    on_ground: { bg: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', label: 'On Ground', glow: 'none' },
+    landed: { bg: 'rgba(52,199,89,0.15)', color: '#34C759', label: 'Landed', glow: 'none' },
+    unknown: { bg: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', label: 'Unknown', glow: 'none' },
   };
   const c = config[status] || config.unknown;
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${c.color} text-white`}>
-      <span className={`w-2 h-2 rounded-full ${c.dot} ${status === 'airborne' ? 'pulse-dot' : ''}`} />
+    <span
+      className="status-pill"
+      style={{
+        background: c.bg,
+        color: c.color,
+        border: `1px solid ${c.color}`,
+        boxShadow: c.glow,
+      }}
+    >
+      <span
+        className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 ${status === 'airborne' ? 'pulse-dot' : ''}`}
+        style={{ background: c.color }}
+      />
       {c.label}
     </span>
   );
@@ -22,12 +37,20 @@ function StatusBadge({ status }) {
 
 function DataRow({ icon, label, value, sub }) {
   return (
-    <div className="flex items-start gap-3 py-2">
-      <span className="text-lg w-6 text-center shrink-0">{icon}</span>
+    <div className="flex items-start gap-3 py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <div
+        className="flex items-center justify-center shrink-0"
+        style={{
+          width: 30, height: 30, borderRadius: 8,
+          background: 'var(--color-card-high)',
+        }}
+      >
+        <MdIcon name={icon} style={{ fontSize: 16, color: 'var(--color-text-secondary)' }} />
+      </div>
       <div className="flex-1 min-w-0">
-        <div className="text-xs text-sky-dim uppercase tracking-wider">{label}</div>
-        <div className="text-sm font-medium text-sky truncate">{value || '—'}</div>
-        {sub && <div className="text-xs text-sky-dim">{sub}</div>}
+        <div className="fy-section-label" style={{ marginBottom: 2, fontSize: 10 }}>{label}</div>
+        <div className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{value || '—'}</div>
+        {sub && <div className="text-xs" style={{ color: 'var(--color-text-tertiary)', marginTop: 1 }}>{sub}</div>}
       </div>
     </div>
   );
@@ -45,7 +68,6 @@ export default function FlightDashboard() {
   const ac = aircraft.find(a => a.tailNumber === selectedTail);
   const data = ac?.icao24 ? liveData[ac.icao24] : null;
 
-  // Reverse geocode when position changes
   useEffect(() => {
     if (!data?.latitude || !data?.longitude) return;
     const timeout = setTimeout(async () => {
@@ -55,7 +77,6 @@ export default function FlightDashboard() {
     return () => clearTimeout(timeout);
   }, [data?.latitude?.toFixed(2), data?.longitude?.toFixed(2)]);
 
-  // Fetch weather when position changes
   useEffect(() => {
     if (!data?.latitude || !data?.longitude || !apiKeys.openweather) return;
     const timeout = setTimeout(async () => {
@@ -69,9 +90,9 @@ export default function FlightDashboard() {
     return (
       <div className="h-full flex items-center justify-center p-6 text-center">
         <div>
-          <div className="text-4xl mb-3">✈️</div>
-          <h3 className="font-display text-lg font-semibold text-sky mb-1">No Aircraft Selected</h3>
-          <p className="text-sm text-sky-dim">Select a tracked aircraft from the list, or add one in Settings.</p>
+          <MdIcon name="flight" style={{ fontSize: 48, color: 'var(--color-text-tertiary)', opacity: 0.3, marginBottom: 12 }} />
+          <h3 className="text-base font-bold mb-1" style={{ color: 'var(--color-text-primary)' }}>No Aircraft Selected</h3>
+          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Select a tracked aircraft from the list, or add one in Settings.</p>
         </div>
       </div>
     );
@@ -85,74 +106,58 @@ export default function FlightDashboard() {
   const compass = headingToCompass(heading);
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto fade-in">
       {/* Header */}
-      <div className="p-4 border-b border-navy-light">
+      <div className="p-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span className="text-2xl">{ac.emoji}</span>
             <div>
-              <h2 className="font-display text-xl font-bold text-amber leading-tight">
+              <h2 className="text-lg font-bold leading-tight" style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.3px' }}>
                 {ac.nickname}
               </h2>
-              <p className="font-display text-sm text-sky-dim">{ac.tailNumber}</p>
+              <p className="text-xs font-mono font-semibold" style={{ color: 'var(--color-text-secondary)' }}>{ac.tailNumber}</p>
             </div>
           </div>
           <StatusBadge status={ac.status} />
         </div>
         {data?.callsign && data.callsign !== ac.tailNumber && (
-          <p className="text-xs text-sky-dim">Callsign: {data.callsign}</p>
+          <p className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>Callsign: {data.callsign}</p>
         )}
       </div>
 
       {/* Data rows */}
-      <div className="p-4 space-y-0.5">
-        <DataRow
-          icon="📍"
-          label="Position"
+      <div className="p-4">
+        <DataRow icon="location_on" label="Position"
           value={nearCity || (data ? `${data.latitude?.toFixed(4)}°, ${data.longitude?.toFixed(4)}°` : null)}
           sub={data ? `${data.latitude?.toFixed(4)}°N, ${data.longitude?.toFixed(4)}°W` : null}
         />
-        <DataRow
-          icon="🧭"
-          label="Heading"
+        <DataRow icon="explore" label="Heading"
           value={heading != null ? `${Math.round(heading)}° · ${compass}` : null}
         />
-        <DataRow
-          icon="🚀"
-          label="Ground Speed"
+        <DataRow icon="speed" label="Ground Speed"
           value={data?.velocity != null ? `${speedKnots} kts` : null}
           sub={data?.velocity != null ? `${speedMph} mph` : null}
         />
-        <DataRow
-          icon="📐"
-          label="Altitude"
+        <DataRow icon="altitude" label="Altitude"
           value={altFeet ? `${altFeet.toLocaleString()} ft MSL` : null}
           sub={geoAltFeet ? `Geo: ${geoAltFeet.toLocaleString()} ft` : null}
         />
-        <DataRow
-          icon="↕️"
-          label="Vertical Rate"
+        <DataRow icon="swap_vert" label="Vertical Rate"
           value={data?.verticalRate != null ? `${Math.round(data.verticalRate * 196.85)} ft/min` : null}
         />
-        <DataRow
-          icon="📶"
-          label="Squawk"
+        <DataRow icon="cell_tower" label="Squawk"
           value={data?.squawk}
         />
 
         {weather && (
           <>
-            <div className="border-t border-navy-light my-2" />
-            <DataRow
-              icon="🌤️"
-              label="Weather"
+            <div className="my-3" style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+            <DataRow icon="partly_cloudy_day" label="Weather"
               value={weather.weather?.[0]?.description}
               sub={`${Math.round(weather.main?.temp)}°F · Vis: ${(weather.visibility / 1609).toFixed(1)} mi`}
             />
-            <DataRow
-              icon="🌬️"
-              label="Wind"
+            <DataRow icon="air" label="Wind"
               value={weather.wind ? `${Math.round(weather.wind.speed)} mph from ${headingToCompass(weather.wind.deg)}` : null}
               sub={weather.wind?.gust ? `Gusts: ${Math.round(weather.wind.gust)} mph` : null}
             />
@@ -161,10 +166,8 @@ export default function FlightDashboard() {
 
         {ac.fuelCapacity && ac.fuelBurn && data?.velocity && ac.status === 'airborne' && (
           <>
-            <div className="border-t border-navy-light my-2" />
-            <DataRow
-              icon="⛽"
-              label="Est. Range"
+            <div className="my-3" style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+            <DataRow icon="local_gas_station" label="Est. Range"
               value={`~${Math.round((ac.fuelCapacity / ac.fuelBurn) * speedKnots)} nm`}
               sub={`${ac.fuelCapacity} gal capacity · ${ac.fuelBurn} gph burn`}
             />
@@ -176,7 +179,12 @@ export default function FlightDashboard() {
       <div className="p-4 md:hidden">
         <button
           onClick={() => setSelectedTail(null)}
-          className="w-full py-2 rounded-lg bg-navy-light text-sky-dim text-sm hover:bg-navy-mid transition-colors"
+          className="w-full py-2.5 rounded-xl text-sm font-semibold transition-colors"
+          style={{
+            background: 'var(--color-card-high)',
+            color: 'var(--color-text-secondary)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
         >
           Close Panel
         </button>

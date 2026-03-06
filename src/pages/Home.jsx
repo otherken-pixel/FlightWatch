@@ -4,6 +4,10 @@ import FlightDashboard from '../components/FlightDashboard';
 import AircraftList from '../components/AircraftList';
 import useStore from '../store/useStore';
 
+function MdIcon({ name, style }) {
+  return <span className="material-symbols-rounded" style={style}>{name}</span>;
+}
+
 export default function Home() {
   const selectedTail = useStore(s => s.selectedTail);
   const aircraft = useStore(s => s.aircraft);
@@ -12,9 +16,15 @@ export default function Home() {
   return (
     <div className="flex-1 flex overflow-hidden relative">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-80 bg-navy border-r border-navy-light shrink-0">
-        <div className="p-3 border-b border-navy-light">
-          <h2 className="font-display text-sm font-semibold text-sky-dim uppercase tracking-wider">
+      <aside
+        className="hidden md:flex flex-col w-80 shrink-0"
+        style={{
+          background: 'var(--color-bg-elevated)',
+          borderRight: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <h2 className="fy-section-label" style={{ margin: 0 }}>
             Tracked Aircraft ({aircraft.length})
           </h2>
         </div>
@@ -22,7 +32,7 @@ export default function Home() {
           <AircraftList />
         </div>
         {selectedTail && (
-          <div className="border-t border-navy-light max-h-[50%] overflow-hidden">
+          <div className="max-h-[50%] overflow-hidden" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <FlightDashboard />
           </div>
         )}
@@ -32,27 +42,36 @@ export default function Home() {
       <div className="flex-1 relative">
         <FlightMap />
 
-        {/* Mobile: Aircraft count button */}
+        {/* Mobile: Aircraft count button — glassmorphism */}
         <button
           onClick={() => setShowPanel(!showPanel)}
-          className="md:hidden absolute top-3 left-3 z-[500] bg-navy/90 backdrop-blur-sm border border-navy-light rounded-xl px-3 py-2 flex items-center gap-2 shadow-lg"
+          className="md:hidden absolute top-3 left-3 z-[500] glass px-3 py-2 flex items-center gap-2 shadow-lg"
+          style={{ borderRadius: 14 }}
         >
-          <span className="text-lg">✈️</span>
-          <span className="font-display font-semibold text-sm text-sky">
+          <MdIcon name="flight" style={{ fontSize: 18, color: 'var(--color-accent)' }} />
+          <span className="font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
             {aircraft.length} Aircraft
           </span>
         </button>
       </div>
 
-      {/* Mobile bottom sheet */}
+      {/* Mobile bottom sheet — glassmorphism */}
       {showPanel && (
         <div className="md:hidden fixed inset-0 z-[600]">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowPanel(false)} />
-          <div className="absolute bottom-14 left-0 right-0 max-h-[70vh] bg-navy rounded-t-2xl border-t border-navy-light overflow-y-auto">
-            <div className="w-10 h-1 bg-navy-light rounded-full mx-auto mt-3 mb-1" />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPanel(false)} />
+          <div
+            className="absolute bottom-14 left-0 right-0 max-h-[70vh] overflow-y-auto"
+            style={{
+              background: 'var(--color-bg-elevated)',
+              borderTop: '1px solid rgba(255,255,255,0.10)',
+              borderRadius: '20px 20px 0 0',
+              boxShadow: '0 -8px 40px rgba(0,0,0,0.5)',
+            }}
+          >
+            <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-1" style={{ background: 'rgba(255,255,255,0.15)' }} />
             <AircraftList onSelect={() => setShowPanel(false)} />
             {selectedTail && (
-              <div className="border-t border-navy-light">
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                 <FlightDashboard />
               </div>
             )}

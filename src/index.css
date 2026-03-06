@@ -1,19 +1,52 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+/* ════════════════════════════════════════════════════════════
+   FLIGHTY-INSPIRED AVIATION DARK DESIGN SYSTEM
+   Premium iOS aesthetic · OLED blacks · Neon status accents
+   Adapted from SkyView/FlightScore for FlightWatch
+════════════════════════════════════════════════════════════ */
+
 @theme {
-  --color-navy: #0a1628;
-  --color-navy-light: #1e3a5f;
-  --color-navy-mid: #152847;
-  --color-amber: #f5a623;
-  --color-amber-light: #ffc555;
-  --color-sky: #f0f4ff;
-  --color-sky-dim: #c8d6e5;
-  --color-success: #27ae60;
-  --color-warning: #e67e22;
-  --color-danger: #e74c3c;
-  --font-display: "Barlow Condensed", sans-serif;
-  --font-body: "Lato", sans-serif;
+  /* Core palette — OLED-optimised */
+  --color-bg: #000000;
+  --color-bg-elevated: #0A0A0F;
+  --color-card: #131317;
+  --color-card-mid: #1C1C22;
+  --color-card-high: #26262E;
+
+  /* Typography */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: rgba(255,255,255,0.60);
+  --color-text-tertiary: rgba(255,255,255,0.35);
+
+  /* Accent — iOS blue */
+  --color-accent: #0A84FF;
+  --color-accent-dim: rgba(10,132,255,0.15);
+
+  /* Status colors */
+  --color-go: #34C759;
+  --color-caution: #FF9500;
+  --color-nogo: #FF3B30;
+  --color-lifr: #BF5AF2;
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-mono: 'Roboto Mono', 'SF Mono', monospace;
+
+  /* Legacy compatibility aliases for existing Tailwind classes */
+  --color-navy: #0A0A0F;
+  --color-navy-light: rgba(255,255,255,0.08);
+  --color-navy-mid: #131317;
+  --color-amber: #0A84FF;
+  --color-amber-light: #3DA0FF;
+  --color-sky: #FFFFFF;
+  --color-sky-dim: rgba(255,255,255,0.60);
+  --color-success: #34C759;
+  --color-warning: #FF9500;
+  --color-danger: #FF3B30;
+  --font-display: 'Inter', -apple-system, sans-serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
 }
 
 * {
@@ -29,47 +62,61 @@ html, body, #root {
 }
 
 body {
-  font-family: var(--font-body);
-  background: var(--color-navy);
-  color: var(--color-sky);
+  font-family: var(--font-sans);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv11', 'ss01';
 }
 
-/* Leaflet overrides */
+/* ── Material Symbols ── */
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded';
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* ── Ultra-thin scrollbar (iOS-style) ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+/* ── Interactive transitions ── */
+button, a { transition: opacity 0.15s ease, transform 0.15s ease; }
+button:active { transform: scale(0.97); }
+
+/* ── Leaflet overrides ── */
 .leaflet-container {
   height: 100%;
   width: 100%;
-  background: var(--color-navy);
+  background: var(--color-bg);
+  font-family: var(--font-sans);
 }
-
 .leaflet-control-zoom a {
-  background: var(--color-navy-mid) !important;
-  color: var(--color-sky) !important;
-  border-color: var(--color-navy-light) !important;
+  background: var(--color-card) !important;
+  color: var(--color-text-primary) !important;
+  border-color: rgba(255,255,255,0.08) !important;
 }
-
 .leaflet-control-attribution {
-  background: rgba(10, 22, 40, 0.8) !important;
-  color: var(--color-sky-dim) !important;
-  font-size: 10px !important;
+  background: rgba(10,10,15,0.85) !important;
+  backdrop-filter: blur(10px);
+  color: var(--color-text-tertiary) !important;
+  font-size: 9px !important;
+  opacity: 0.6;
 }
 .leaflet-control-attribution a {
-  color: var(--color-amber) !important;
+  color: var(--color-accent) !important;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-::-webkit-scrollbar-track {
-  background: var(--color-navy);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-navy-light);
-  border-radius: 3px;
-}
-
-/* Toast animations */
 @keyframes slideUp {
   from { transform: translateY(100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
@@ -83,26 +130,45 @@ body {
   50% { transform: translateY(-20px) scale(1.1); }
   100% { transform: translateY(-8px) scale(1); }
 }
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
+}
+@keyframes scorePop {
+  0% { transform: scale(0.75); opacity: 0; }
+  75% { transform: scale(1.06); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 .toast-enter { animation: slideUp 0.4s ease-out; }
 .toast-exit { animation: slideDown 0.3s ease-in forwards; }
 .liftoff-icon { animation: liftoff 0.6s ease-out; }
+.fade-in { animation: fadeIn 0.25s ease; }
 
-/* Plane marker */
+/* ── Pulse dot for airborne status ── */
+.pulse-dot {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ── Plane marker ── */
 .plane-marker {
   background: none !important;
   border: none !important;
 }
 .plane-icon {
   font-size: 28px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
   transition: transform 0.5s ease;
 }
 
-/* Pulse dot for ground status */
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.5; }
+/* ── Glassmorphism utility ── */
+.glass {
+  background: rgba(10,10,15,0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
 }
-.pulse-dot {
-  animation: pulse 2s ease-in-out infinite;
-}
+
+/* ── Font utilities ── */
+.font-mono { font-family: var(--font-mono); }
