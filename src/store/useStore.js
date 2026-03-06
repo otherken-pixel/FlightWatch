@@ -44,8 +44,11 @@ const useStore = create((set, get) => ({
   // Flight trail points keyed by tail number
   trails: {},
 
-  // Flight history log
+  // Flight history log (trips with trail data)
   flightHistory: loadFromStorage('history', []),
+
+  // Active trips keyed by tail number (in-progress flights)
+  activeTrips: {},
 
   // Notification settings
   notifications: loadFromStorage('notifications', {
@@ -192,6 +195,69 @@ const useStore = create((set, get) => ({
 
   removeToast: (id) => {
     set({ toasts: get().toasts.filter(t => t.id !== id) });
+  },
+
+  // Start an active trip when takeoff is detected
+  startTrip: (tailNumber, aircraft, startData) => {
+    const activeTrips = { ...get().activeTrips };
+    activeTrips[tailNumber] = {
+      id: crypto.randomUUID(),
+      tailNumber,
+      nickname: aircraft.nickname,
+      icao24: aircraft.icao24,
+      emoji: aircraft.emoji,
+      aircraftType: aircraft.aircraftType || '',
+      startedAt: Date.now(),
+      departureAirport: startData.airport || null,
+      departureCoords: startData.coords || null,
+      trail: startData.coords ? [{ ...startData.coords, alt: startData.alt || 0, timestamp: Date.now() }] : [],
+      lastState: startData.state || null,
+    };
+    set({ activeTrips });
+  },
+
+  // Add a point to the active trip trail
+  addTripTrailPoint: (tailNumber, point) => {
+    const activeTrips = { ...get().activeTrips };
+    const trip = activeTrips[tailNumber];
+    if (!trip) return;
+    trip.trail = [...trip.trail, { lat: point.lat, lng: point.lng, alt: point.alt, timestamp: Date.now() }];
+    trip.lastState = point.state || trip.lastState;
+    activeTrips[tailNumber] = { ...trip };
+    set({ activeTrips });
+  },
+
+  // Complete a trip and save to history
+  completeTrip: (tailNumber, endData) => {
+    const activeTrips = { ...get().activeTrips };
+    const trip = activeTrips[tailNumber];
+    if (!trip) return;
+
+    const completedTrip = {
+      ...trip,
+      endedAt: Date.now(),
+      duration: Date.now() - trip.startedAt,
+      arrivalAirport: endData.airport || null,
+      arrivalCoords: endData.coords || null,
+      maxAltitude: Math.max(0, ...trip.trail.map(p => p.alt || 0)),
+      maxSpeed: endData.maxSpeed || 0,
+    };
+
+    delete activeTrips[tailNumber];
+    const history = [completedTrip, ...get().flightHistory].slice(0, 200);
+    saveToStorage('history', history);
+    set({ flightHistory: history, activeTrips });
+    get().syncToCloud();
+  },
+
+  // Get active trip for a tail number
+  getActiveTrip: (tailNumber) => {
+    return get().activeTrips[tailNumber] || null;
+  },
+
+  // Get trips for a specific tail number
+  getTripsForAircraft: (tailNumber) => {
+    return get().flightHistory.filter(t => t.tailNumber === tailNumber);
   },
 
   addFlightToHistory: (flight) => {
