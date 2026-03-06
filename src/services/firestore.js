@@ -6,12 +6,13 @@ import {
   setDoc,
   deleteDoc,
 } from 'firebase/firestore';
-import { db } from './firebase.js';
+import { db, firebaseConfigured } from './firebase.js';
 
 /**
  * Load all user data (aircraft, settings, notifications, apiKeys, history).
  */
 export async function loadUserData(uid) {
+  if (!firebaseConfigured || !db) return null;
   const userRef = doc(db, 'users', uid);
   const snap = await getDoc(userRef);
   return snap.exists() ? snap.data() : null;
@@ -21,6 +22,7 @@ export async function loadUserData(uid) {
  * Save complete user data document.
  */
 export async function saveUserData(uid, data) {
+  if (!firebaseConfigured || !db) return;
   const userRef = doc(db, 'users', uid);
   await setDoc(userRef, data, { merge: true });
 }
