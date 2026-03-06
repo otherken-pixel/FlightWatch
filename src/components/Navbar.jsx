@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { logOut } from '../services/auth';
 
 const links = [
   { to: '/', icon: 'map', label: 'Map' },
@@ -10,7 +12,18 @@ function MdIcon({ name, style, className = '' }) {
   return <span className={`material-symbols-rounded ${className}`} style={style}>{name}</span>;
 }
 
-export default function Navbar() {
+export default function Navbar({ user, onShowLogin }) {
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const handleLogout = async () => {
+    setShowUserMenu(false);
+    try { await logOut(); } catch (err) { console.warn('Logout failed:', err); }
+  };
+
+  // User avatar: first letter of email/displayName or a person icon
+  const avatarLetter = user?.displayName?.[0] || user?.email?.[0] || null;
+  const photoURL = user?.photoURL;
+
   return (
     <>
       {/* Desktop frosted glass header */}
@@ -39,29 +52,139 @@ export default function Navbar() {
             FlightWatch
           </span>
         </div>
-        <nav className="flex items-center gap-1">
-          {links.map(link => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                `flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? 'text-accent'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`
-              }
-              style={({ isActive }) => ({
-                borderRadius: 10,
-                background: isActive ? 'var(--color-accent-dim)' : 'none',
-                border: isActive ? '1px solid rgba(10,132,255,0.3)' : '1px solid transparent',
-              })}
-            >
-              <MdIcon name={link.icon} style={{ fontSize: 18 }} />
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
+
+        <div className="flex items-center gap-2">
+          <nav className="flex items-center gap-1">
+            {links.map(link => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-150 ${
+                    isActive ? 'text-accent' : 'text-text-secondary hover:text-text-primary'
+                  }`
+                }
+                style={({ isActive }) => ({
+                  borderRadius: 10,
+                  background: isActive ? 'var(--color-accent-dim)' : 'none',
+                  border: isActive ? '1px solid rgba(10,132,255,0.3)' : '1px solid transparent',
+                })}
+              >
+                <MdIcon name={link.icon} style={{ fontSize: 18 }} />
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* Auth button */}
+          <div className="relative ml-2">
+            {user ? (
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center justify-center"
+                style={{
+                  width: 34, height: 34, borderRadius: 99,
+                  background: photoURL ? 'none' : 'var(--color-accent-dim)',
+                  border: '1px solid rgba(10,132,255,0.3)',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                }}
+              >
+                {photoURL ? (
+                  <img src={photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+                ) : avatarLetter ? (
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-accent)', textTransform: 'uppercase' }}>
+                    {avatarLetter}
+                  </span>
+                ) : (
+                  <MdIcon name="person" style={{ fontSize: 18, color: 'var(--color-accent)' }} />
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={onShowLogin}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold"
+                style={{
+                  borderRadius: 10,
+                  background: 'var(--color-accent-dim)',
+                  border: '1px solid rgba(10,132,255,0.3)',
+                  color: 'var(--color-accent)',
+                  cursor: 'pointer',
+                }}
+              >
+                <MdIcon name="person" style={{ fontSize: 16 }} />
+                Sign In
+              </button>
+            )}
+
+            {/* User dropdown menu */}
+            {showUserMenu && user && (
+              <>
+                <div
+                  style={{ position: 'fixed', inset: 0, zIndex: 150 }}
+                  onClick={() => setShowUserMenu(false)}
+                />
+                <div
+                  className="fade-in"
+                  style={{
+                    position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                    background: 'var(--color-card)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 16, padding: 8, minWidth: 220,
+                    boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+                    zIndex: 200,
+                  }}
+                >
+                  {/* User info */}
+                  <div style={{ padding: '10px 12px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <div
+                        className="flex items-center justify-center shrink-0"
+                        style={{
+                          width: 36, height: 36, borderRadius: 99,
+                          background: photoURL ? 'none' : 'var(--color-accent-dim)',
+                          border: '1px solid rgba(10,132,255,0.2)',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {photoURL ? (
+                          <img src={photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+                        ) : (
+                          <MdIcon name="person" style={{ fontSize: 18, color: 'var(--color-accent)' }} />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        {user.displayName && (
+                          <div className="text-sm font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>
+                            {user.displayName}
+                          </div>
+                        )}
+                        <div className="text-xs truncate" style={{ color: 'var(--color-text-tertiary)' }}>
+                          {user.email}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sign out */}
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2.5 w-full text-left"
+                    style={{
+                      padding: '10px 12px', borderRadius: 10,
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'var(--color-nogo)', fontSize: 14, fontWeight: 500,
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <MdIcon name="logout" style={{ fontSize: 18 }} />
+                    Sign Out
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </header>
 
       {/* Mobile bottom nav — frosted glass */}
@@ -104,7 +227,99 @@ export default function Navbar() {
             )}
           </NavLink>
         ))}
+        {/* Mobile account button */}
+        <button
+          onClick={user ? () => setShowUserMenu(!showUserMenu) : onShowLogin}
+          className="flex flex-col items-center gap-1 py-2 text-[10px] font-semibold"
+          style={{
+            letterSpacing: '0.3px',
+            color: user ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: 36, height: 32, borderRadius: 10,
+              background: user ? 'var(--color-accent-dim)' : 'transparent',
+              transition: 'background 0.15s',
+              overflow: 'hidden',
+            }}
+          >
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt="" style={{ width: 22, height: 22, borderRadius: 99, objectFit: 'cover' }} referrerPolicy="no-referrer" />
+            ) : (
+              <MdIcon name="person" style={{ fontSize: 22 }} />
+            )}
+          </div>
+          {user ? 'Account' : 'Sign In'}
+        </button>
       </nav>
+
+      {/* Mobile user menu (shown as bottom sheet) */}
+      {showUserMenu && user && (
+        <div className="md:hidden fixed inset-0 z-[700]">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowUserMenu(false)} />
+          <div
+            className="absolute bottom-14 left-0 right-0 fade-in"
+            style={{
+              background: 'var(--color-bg-elevated)',
+              borderTop: '1px solid rgba(255,255,255,0.10)',
+              borderRadius: '20px 20px 0 0',
+              padding: '24px 20px',
+              boxShadow: '0 -8px 40px rgba(0,0,0,0.5)',
+            }}
+          >
+            <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: 'rgba(255,255,255,0.15)' }} />
+
+            {/* User info */}
+            <div className="flex items-center gap-3 mb-5">
+              <div
+                className="flex items-center justify-center shrink-0"
+                style={{
+                  width: 48, height: 48, borderRadius: 99,
+                  background: photoURL ? 'none' : 'var(--color-accent-dim)',
+                  border: '1px solid rgba(10,132,255,0.2)',
+                  overflow: 'hidden',
+                }}
+              >
+                {photoURL ? (
+                  <img src={photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+                ) : (
+                  <MdIcon name="person" style={{ fontSize: 24, color: 'var(--color-accent)' }} />
+                )}
+              </div>
+              <div className="min-w-0">
+                {user.displayName && (
+                  <div className="text-base font-bold truncate" style={{ color: 'var(--color-text-primary)' }}>
+                    {user.displayName}
+                  </div>
+                )}
+                <div className="text-xs truncate" style={{ color: 'var(--color-text-tertiary)' }}>
+                  {user.email}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold"
+              style={{
+                borderRadius: 14,
+                background: 'rgba(255,59,48,0.12)',
+                border: '1px solid rgba(255,59,48,0.2)',
+                color: '#FF3B30',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              <MdIcon name="logout" style={{ fontSize: 18 }} />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

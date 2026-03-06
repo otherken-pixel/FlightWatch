@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { loadUserData, saveUserData } from '../services/firestore';
 
 const STORAGE_KEY = 'flightwatch';
 
@@ -17,7 +18,20 @@ function saveToStorage(key, value) {
   } catch { /* storage full or unavailable */ }
 }
 
+// Debounced Firestore save to avoid spamming writes
+let firestoreSaveTimeout = null;
+function debouncedFirestoreSave(uid, dataFn) {
+  clearTimeout(firestoreSaveTimeout);
+  firestoreSaveTimeout = setTimeout(() => {
+    const data = dataFn();
+    saveUserData(uid, { ...data, updatedAt: Date.now() }).catch(console.warn);
+  }, 1500);
+}
+
 const useStore = create((set, get) => ({
+  // Current authenticated user (null = guest)
+  currentUser: null,
+
   // Tracked aircraft list
   aircraft: loadFromStorage('aircraft', []),
 
@@ -55,9 +69,56 @@ const useStore = create((set, get) => ({
   // Settings
   settings: loadFromStorage('settings', {
     mapStyle: 'dark',
-    units: 'aviation', // aviation (knots/ft) or metric
+    units: 'aviation',
     pollInterval: 10000,
   }),
+
+  // Auth: set user and load cloud data
+  setCurrentUser: (user) => set({ currentUser: user }),
+
+  loadCloudData: async (uid) => {
+    try {
+      const data = await loadUserData(uid);
+      if (!data) return;
+      const updates = {};
+      if (data.aircraft && data.aircraft.length > 0) {
+        updates.aircraft = data.aircraft;
+        saveToStorage('aircraft', data.aircraft);
+      }
+      if (data.flightHistory && data.flightHistory.length > 0) {
+        updates.flightHistory = data.flightHistory;
+        saveToStorage('history', data.flightHistory);
+      }
+      if (data.notifications) {
+        updates.notifications = data.notifications;
+        saveToStorage('notifications', data.notifications);
+      }
+      if (data.apiKeys) {
+        updates.apiKeys = data.apiKeys;
+        saveToStorage('apiKeys', data.apiKeys);
+      }
+      if (data.settings) {
+        updates.settings = { ...get().settings, ...data.settings };
+        saveToStorage('settings', updates.settings);
+      }
+      if (Object.keys(updates).length > 0) set(updates);
+    } catch (err) {
+      console.warn('[FlightWatch] Failed to load cloud data:', err);
+    }
+  },
+
+  // Save all persistable data to Firestore
+  syncToCloud: () => {
+    const { currentUser, aircraft, flightHistory, notifications, apiKeys, settings } = get();
+    if (!currentUser) return;
+    debouncedFirestoreSave(currentUser.uid, () => ({
+      aircraft,
+      flightHistory,
+      notifications,
+      apiKeys,
+      settings,
+    }));
+  },
 
   // Actions
   addAircraft: (aircraft) => {
@@ -66,29 +127,32 @@ const useStore = create((set, get) => ({
       tailNumber: aircraft.tailNumber.toUpperCase(),
       icao24: aircraft.icao24?.toLowerCase() || '',
       nickname: aircraft.nickname || aircraft.tailNumber,
-      color: aircraft.color || '#f5a623',
+      color: aircraft.color || '#0A84FF',
       emoji: aircraft.emoji || '✈️',
       aircraftType: aircraft.aircraftType || '',
       fuelCapacity: aircraft.fuelCapacity || null,
       fuelBurn: aircraft.fuelBurn || null,
       addedAt: Date.now(),
       lastSeen: null,
-      status: 'unknown', // unknown, on_ground, taxiing, airborne, landed
+      status: 'unknown',
     }];
     saveToStorage('aircraft', list);
     set({ aircraft: list });
+    get().syncToCloud();
   },
 
   removeAircraft: (id) => {
     const list = get().aircraft.filter(a => a.id !== id);
     saveToStorage('aircraft', list);
     set({ aircraft: list });
+    get().syncToCloud();
   },
 
   updateAircraft: (id, updates) => {
     const list = get().aircraft.map(a => a.id === id ? { ...a, ...updates } : a);
     saveToStorage('aircraft', list);
     set({ aircraft: list });
+    get().syncToCloud();
   },
 
   setSelectedTail: (tail) => set({ selectedTail: tail }),
@@ -134,24 +198,28 @@ const useStore = create((set, get) => ({
     const history = [flight, ...get().flightHistory].slice(0, 200);
     saveToStorage('history', history);
     set({ flightHistory: history });
+    get().syncToCloud();
   },
 
   updateNotifications: (updates) => {
     const notifications = { ...get().notifications, ...updates };
     saveToStorage('notifications', notifications);
     set({ notifications });
+    get().syncToCloud();
   },
 
   updateApiKeys: (updates) => {
     const apiKeys = { ...get().apiKeys, ...updates };
     saveToStorage('apiKeys', apiKeys);
     set({ apiKeys });
+    get().syncToCloud();
   },
 
   updateSettings: (updates) => {
     const settings = { ...get().settings, ...updates };
     saveToStorage('settings', settings);
     set({ settings });
+    get().syncToCloud();
   },
 }));
 
