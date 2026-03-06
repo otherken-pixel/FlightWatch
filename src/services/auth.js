@@ -5,7 +5,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { auth, googleProvider } from './firebase.js';
+import { auth, googleProvider, firebaseConfigured } from './firebase.js';
 
 export function signInWithGoogle() {
   return signInWithPopup(auth, googleProvider);
@@ -24,6 +24,11 @@ export function logOut() {
 }
 
 export function onAuthChange(callback) {
+  if (!firebaseConfigured || !auth) {
+    // Firebase not configured — skip auth, run as guest
+    callback(null);
+    return () => {};
+  }
   return onAuthStateChanged(auth, callback);
 }
 

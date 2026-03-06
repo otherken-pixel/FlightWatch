@@ -11,9 +11,19 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = initializeFirestore(app, { localCache: persistentLocalCache() });
-export const googleProvider = new GoogleAuthProvider();
+export const firebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
 
+let app = null;
+let auth = null;
+let db = null;
+let googleProvider = null;
+
+if (firebaseConfigured) {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = initializeFirestore(app, { localCache: persistentLocalCache() });
+  googleProvider = new GoogleAuthProvider();
+}
+
+export { auth, db, googleProvider };
 export default app;
