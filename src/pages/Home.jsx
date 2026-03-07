@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import { timeAgo } from '../utils/api';
+import { isValidNNumber, nNumberToIcao24 } from '../utils/nNumberToIcao';
 
 function MdIcon({ name, style }) {
   return <span className="material-symbols-rounded" style={style}>{name}</span>;
@@ -157,8 +158,24 @@ function AddAircraftModal({ onClose }) {
   const addToast = useStore(s => s.addToast);
   const [tail, setTail] = useState('');
   const [icao, setIcao] = useState('');
+  const [icaoAuto, setIcaoAuto] = useState(false);
   const [nickname, setNickname] = useState('');
   const [type, setType] = useState('');
+
+  const handleTailChange = (val) => {
+    setTail(val);
+    if (isValidNNumber(val)) {
+      const hex = nNumberToIcao24(val);
+      if (hex) { setIcao(hex); setIcaoAuto(true); }
+    } else if (icaoAuto) {
+      setIcao(''); setIcaoAuto(false);
+    }
+  };
+
+  const handleIcaoChange = (val) => {
+    setIcao(val);
+    setIcaoAuto(false);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -200,8 +217,8 @@ function AddAircraftModal({ onClose }) {
         </div>
 
         <form onSubmit={handleSubmit}>
-          <InputField label="Tail Number *" value={tail} onChange={setTail} placeholder="N12345" />
-          <InputField label="ICAO24 Hex Code" value={icao} onChange={setIcao} placeholder="a1b2c3 (required for live tracking)" />
+          <InputField label="Tail Number *" value={tail} onChange={handleTailChange} placeholder="N12345" />
+          <InputField label="ICAO24 Hex Code" value={icao} onChange={handleIcaoChange} placeholder="a1b2c3 (required for live tracking)" />
           <InputField label="Nickname" value={nickname} onChange={setNickname} placeholder="Dad's Cessna" />
           <InputField label="Aircraft Type" value={type} onChange={setType} placeholder="Cessna 172" />
 
