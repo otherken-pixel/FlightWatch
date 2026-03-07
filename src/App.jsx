@@ -3,7 +3,9 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ToastContainer from './components/ToastContainer';
 import Home from './pages/Home';
-import TrackView from './pages/TrackView';
+import AircraftDetail from './pages/AircraftDetail';
+import TripDetail from './pages/TripDetail';
+import LiveTrack from './pages/LiveTrack';
 import Settings from './pages/Settings';
 import History from './pages/History';
 import LoginScreen from './components/auth/LoginScreen';
@@ -64,7 +66,9 @@ export default function App() {
       <Navbar user={user} onShowLogin={() => setShowLogin(true)} />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/track/:tailNumber" element={<TrackView />} />
+        <Route path="/aircraft/:tailNumber" element={<AircraftDetail />} />
+        <Route path="/trip/:tripId" element={<TripDetail />} />
+        <Route path="/live/:tailNumber" element={<LiveTrack />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/history" element={<History />} />
       </Routes>

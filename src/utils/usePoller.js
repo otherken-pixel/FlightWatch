@@ -1,15 +1,17 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store/useStore';
-import { fetchOpenSkyMultiple, reverseGeocode } from './api';
+import { fetchOpenSkyMultiple } from './api';
 import { determineFlightState, getStateTransitionEvent, isSignalLost } from './flightStateMachine';
 import { sendNotification, playNotificationSound } from './notifications';
 import { findNearestAirport } from './airports';
 
 /**
  * Custom hook that polls ADS-B data for all tracked aircraft
+ * and manages trip lifecycle (start/trail/complete)
  */
 export function usePoller() {
   const intervalRef = useRef(null);
+  const maxSpeedRef = useRef({});
   const aircraft = useStore(s => s.aircraft);
   const settings = useStore(s => s.settings);
   const notifications = useStore(s => s.notifications);
@@ -17,7 +19,9 @@ export function usePoller() {
   const updateAircraft = useStore(s => s.updateAircraft);
   const addTrailPoint = useStore(s => s.addTrailPoint);
   const addToast = useStore(s => s.addToast);
-  const addFlightToHistory = useStore(s => s.addFlightToHistory);
+  const startTrip = useStore(s => s.startTrip);
+  const addTripTrailPoint = useStore(s => s.addTripTrailPoint);
+  const completeTrip = useStore(s => s.completeTrip);
 
   useEffect(() => {
     const poll = async () => {
@@ -45,43 +49,84 @@ export function usePoller() {
               lastSeen: Date.now(),
             });
 
+            // Track max speed for trip
+            if (state.velocity) {
+              const current = maxSpeedRef.current[ac.tailNumber] || 0;
+              if (state.velocity > current) {
+                maxSpeedRef.current[ac.tailNumber] = state.velocity;
+              }
+            }
+
             // Add trail point if airborne
             if (newState === 'airborne') {
-              addTrailPoint(ac.tailNumber, {
+              const point = {
                 lat: state.latitude,
                 lng: state.longitude,
                 alt: state.baroAltitude,
+              };
+              addTrailPoint(ac.tailNumber, point);
+
+              // Also add to active trip trail
+              addTripTrailPoint(ac.tailNumber, {
+                ...point,
+                state: {
+                  altitude: state.baroAltitude,
+                  speed: state.velocity,
+                  heading: state.heading,
+                  verticalRate: state.verticalRate,
+                  squawk: state.squawk,
+                  callsign: state.callsign,
+                },
               });
             }
 
             // Handle state transition events
-            if (event === 'takeoff' && notifications.takeoff) {
+            if (event === 'takeoff') {
               const airport = findNearestAirport(state.latitude, state.longitude);
-              const msg = airport && airport.distance < 5
-                ? `${ac.nickname} just took off near ${airport.icao}!`
-                : `${ac.nickname} is airborne!`;
-              addToast({ type: 'takeoff', title: 'Takeoff Detected', message: msg });
-              sendNotification('FlightWatch', msg);
-              if (notifications.sound) playNotificationSound('takeoff');
+
+              // Start a new trip
+              maxSpeedRef.current[ac.tailNumber] = 0;
+              startTrip(ac.tailNumber, ac, {
+                airport: airport && airport.distance < 5 ? airport.icao : null,
+                coords: { lat: state.latitude, lng: state.longitude },
+                alt: state.baroAltitude,
+                state: {
+                  altitude: state.baroAltitude,
+                  speed: state.velocity,
+                  heading: state.heading,
+                  callsign: state.callsign,
+                },
+              });
+
+              if (notifications.takeoff) {
+                const msg = airport && airport.distance < 5
+                  ? `${ac.nickname} just took off near ${airport.icao}!`
+                  : `${ac.nickname} is airborne!`;
+                addToast({ type: 'takeoff', title: 'Takeoff Detected', message: msg });
+                sendNotification('FlightWatch', msg);
+                if (notifications.sound) playNotificationSound('takeoff');
+              }
             }
 
-            if (event === 'landing' && notifications.landing) {
+            if (event === 'landing') {
               const airport = findNearestAirport(state.latitude, state.longitude);
-              const msg = airport && airport.distance < 5
-                ? `${ac.nickname} landed at ${airport.icao} — safe and sound!`
-                : `${ac.nickname} has landed — safe and sound!`;
-              addToast({ type: 'landing', title: 'Landing Detected', message: msg });
-              sendNotification('FlightWatch', msg);
-              if (notifications.sound) playNotificationSound('landing');
 
-              // Log to history
-              addFlightToHistory({
-                id: crypto.randomUUID(),
-                tailNumber: ac.tailNumber,
-                nickname: ac.nickname,
-                landedAt: Date.now(),
-                nearAirport: airport?.icao || 'Unknown',
+              // Complete the active trip
+              completeTrip(ac.tailNumber, {
+                airport: airport && airport.distance < 5 ? airport.icao : null,
+                coords: { lat: state.latitude, lng: state.longitude },
+                maxSpeed: maxSpeedRef.current[ac.tailNumber] || 0,
               });
+              maxSpeedRef.current[ac.tailNumber] = 0;
+
+              if (notifications.landing) {
+                const msg = airport && airport.distance < 5
+                  ? `${ac.nickname} landed at ${airport.icao} — safe and sound!`
+                  : `${ac.nickname} has landed — safe and sound!`;
+                addToast({ type: 'landing', title: 'Landing Detected', message: msg });
+                sendNotification('FlightWatch', msg);
+                if (notifications.sound) playNotificationSound('landing');
+              }
             }
           } else {
             // No data returned for this aircraft

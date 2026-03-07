@@ -1,11 +1,13 @@
+import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
-import { timeAgo } from '../utils/api';
+import { timeAgo, formatDuration, msToKnots, metersToFeet } from '../utils/api';
 
 function MdIcon({ name, style }) {
   return <span className="material-symbols-rounded" style={style}>{name}</span>;
 }
 
 export default function History() {
+  const navigate = useNavigate();
   const flightHistory = useStore(s => s.flightHistory);
 
   return (
@@ -24,47 +26,86 @@ export default function History() {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {flightHistory.map(flight => (
-              <div
-                key={flight.id}
-                className="fade-in"
-                style={{
-                  background: 'var(--color-card)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 16,
-                  padding: '14px 18px',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-                }}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className="flex items-center justify-center"
-                      style={{
-                        width: 30, height: 30, borderRadius: 8,
-                        background: 'rgba(52,199,89,0.15)',
-                      }}
-                    >
-                      <MdIcon name="flight_land" style={{ fontSize: 16, color: '#34C759' }} />
+          <div className="space-y-3">
+            {flightHistory.map(flight => {
+              const hasTrip = !!flight.trail;
+              const departure = flight.departureAirport || flight.nearAirport || 'Unknown';
+              const arrival = flight.arrivalAirport || flight.nearAirport || 'Unknown';
+              const duration = flight.duration ? formatDuration(flight.duration) : flight.duration;
+              const maxAlt = flight.maxAltitude ? `${metersToFeet(flight.maxAltitude).toLocaleString()} ft` : null;
+
+              return (
+                <button
+                  key={flight.id}
+                  onClick={() => hasTrip ? navigate(`/trip/${flight.id}`) : navigate(`/aircraft/${encodeURIComponent(flight.tailNumber)}`)}
+                  className="w-full text-left fade-in transition-all"
+                  style={{
+                    background: 'var(--color-card)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 18,
+                    padding: '16px 18px',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">{flight.emoji || '✈️'}</span>
+                      <div>
+                        <span className="font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                          {flight.nickname || flight.tailNumber}
+                        </span>
+                        <span className="text-xs font-mono ml-2" style={{ color: 'var(--color-text-tertiary)' }}>
+                          {flight.tailNumber}
+                        </span>
+                      </div>
                     </div>
-                    <span className="font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>{flight.nickname}</span>
+                    <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
+                      {timeAgo(flight.endedAt || flight.landedAt)}
+                    </span>
                   </div>
-                  <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>{timeAgo(flight.landedAt)}</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
-                  <span className="font-mono font-semibold">{flight.tailNumber}</span>
-                  <span style={{ opacity: 0.4 }}>·</span>
-                  <span>Near {flight.nearAirport}</span>
-                  {flight.duration && (
-                    <>
-                      <span style={{ opacity: 0.4 }}>·</span>
-                      <span>{flight.duration}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
+
+                  {/* Route */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold font-mono" style={{ color: 'var(--color-text-secondary)' }}>
+                      {departure}
+                    </span>
+                    <div className="flex-1 flex items-center">
+                      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+                      <MdIcon name="flight" style={{ fontSize: 14, color: 'var(--color-accent)', transform: 'rotate(90deg)', margin: '0 4px' }} />
+                      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+                    </div>
+                    <span className="text-xs font-bold font-mono" style={{ color: 'var(--color-text-secondary)' }}>
+                      {arrival}
+                    </span>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
+                    {duration && (
+                      <div className="flex items-center gap-1">
+                        <MdIcon name="schedule" style={{ fontSize: 12 }} />
+                        <span>{duration}</span>
+                      </div>
+                    )}
+                    {maxAlt && (
+                      <div className="flex items-center gap-1">
+                        <MdIcon name="height" style={{ fontSize: 12 }} />
+                        <span>{maxAlt}</span>
+                      </div>
+                    )}
+                    {hasTrip && (
+                      <div className="flex items-center gap-1 ml-auto">
+                        <MdIcon name="map" style={{ fontSize: 12, color: 'var(--color-accent)' }} />
+                        <span style={{ color: 'var(--color-accent)' }}>View trip</span>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

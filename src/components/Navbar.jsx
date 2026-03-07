@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { logOut } from '../services/auth';
 
 const links = [
-  { to: '/', icon: 'map', label: 'Map' },
+  { to: '/', icon: 'flight', label: 'Aircraft' },
   { to: '/history', icon: 'history', label: 'History' },
   { to: '/settings', icon: 'settings', label: 'Settings' },
 ];
