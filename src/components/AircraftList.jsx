@@ -8,7 +8,7 @@ function MdIcon({ name, style }) {
 function StatusDot({ status }) {
   const colors = {
     airborne: '#34C759',
-    taxiing: '#FF9500',
+    taxiing: '#FF9F0A',
     on_ground: 'rgba(255,255,255,0.3)',
     landed: '#34C759',
     unknown: 'rgba(255,255,255,0.2)',
@@ -55,7 +55,7 @@ export default function AircraftList({ onSelect }) {
             style={{
               borderRadius: 14,
               background: isSelected ? 'var(--color-accent-dim)' : 'transparent',
-              border: isSelected ? '1px solid rgba(10,132,255,0.3)' : '1px solid transparent',
+              border: isSelected ? '1px solid rgba(0,122,255,0.3)' : '1px solid transparent',
             }}
           >
             <div className="flex items-center gap-3">

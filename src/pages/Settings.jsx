@@ -65,7 +65,7 @@ function Toggle({ label, checked, onChange }) {
         style={{
           width: 44, height: 24, borderRadius: 99,
           background: checked ? 'var(--color-accent)' : 'var(--color-card-high)',
-          boxShadow: checked ? '0 0 10px rgba(10,132,255,0.3)' : 'none',
+          boxShadow: checked ? '0 0 10px rgba(0,122,255,0.3)' : 'none',
         }}
       >
         <span
@@ -161,7 +161,7 @@ export default function Settings() {
               color: '#fff',
               borderRadius: 12,
               border: 'none',
-              boxShadow: '0 4px 18px rgba(10,132,255,0.4)',
+              boxShadow: '0 4px 18px rgba(0,122,255,0.4)',
             }}
           >
             Add Aircraft
@@ -257,7 +257,7 @@ export default function Settings() {
                     background: settings.mapStyle === style ? 'var(--color-accent)' : 'var(--color-card-high)',
                     color: settings.mapStyle === style ? '#fff' : 'var(--color-text-secondary)',
                     border: settings.mapStyle === style ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                    boxShadow: settings.mapStyle === style ? '0 4px 12px rgba(10,132,255,0.3)' : 'none',
+                    boxShadow: settings.mapStyle === style ? '0 4px 12px rgba(0,122,255,0.3)' : 'none',
                   }}
                 >
                   {style}
@@ -283,7 +283,7 @@ export default function Settings() {
                     background: settings.pollInterval === opt.value ? 'var(--color-accent)' : 'var(--color-card-high)',
                     color: settings.pollInterval === opt.value ? '#fff' : 'var(--color-text-secondary)',
                     border: settings.pollInterval === opt.value ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                    boxShadow: settings.pollInterval === opt.value ? '0 4px 12px rgba(10,132,255,0.3)' : 'none',
+                    boxShadow: settings.pollInterval === opt.value ? '0 4px 12px rgba(0,122,255,0.3)' : 'none',
                   }}
                 >
                   {opt.label}

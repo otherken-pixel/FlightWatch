@@ -10,7 +10,7 @@ function MdIcon({ name, style }) {
 }
 
 function createEndpointIcon(type) {
-  const color = type === 'departure' ? '#34C759' : '#0A84FF';
+  const color = type === 'departure' ? '#34C759' : '#007AFF';
   const icon = type === 'departure' ? 'flight_takeoff' : 'flight_land';
   return L.divIcon({
     className: 'plane-marker',
@@ -79,7 +79,7 @@ export default function TripDetail() {
           className="px-4 py-2 text-sm font-medium"
           style={{
             background: 'var(--color-accent-dim)', color: 'var(--color-accent)',
-            borderRadius: 12, border: '1px solid rgba(10,132,255,0.3)', cursor: 'pointer', fontFamily: 'inherit',
+            borderRadius: 12, border: '1px solid rgba(0,122,255,0.3)', cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
           Back to Home
@@ -180,7 +180,7 @@ export default function TripDetail() {
               <TileLayer url={tileUrl} />
               <Polyline
                 positions={trailPositions}
-                pathOptions={{ color: '#0A84FF', weight: 3, opacity: 0.8 }}
+                pathOptions={{ color: '#007AFF', weight: 3, opacity: 0.8 }}
               />
               {/* Departure marker */}
               <Marker position={trailPositions[0]} icon={createEndpointIcon('departure')} />

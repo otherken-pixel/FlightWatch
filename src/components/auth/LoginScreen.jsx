@@ -83,7 +83,7 @@ export default function LoginScreen({ onClose }) {
         style={{
           width: '100%', maxWidth: 380,
           background: 'var(--color-bg-elevated)',
-          borderRadius: 24, padding: '36px 28px',
+          borderRadius: 22, padding: '36px 28px',
           position: 'relative',
           boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
           border: '1px solid rgba(255,255,255,0.08)',
@@ -108,11 +108,12 @@ export default function LoginScreen({ onClose }) {
         {/* Branding */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 28 }}>
           <div
+            className="sky-gradient"
             style={{
-              width: 68, height: 68, borderRadius: 20,
-              background: 'var(--color-accent)', marginBottom: 18,
+              width: 68, height: 68, borderRadius: 18,
+              marginBottom: 18,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 24px rgba(10,132,255,0.4)',
+              boxShadow: '0 0 24px rgba(0,122,255,0.4)',
             }}
           >
             <MdIcon name="flight" style={{ fontSize: 38, color: '#fff' }} />
@@ -203,9 +204,9 @@ export default function LoginScreen({ onClose }) {
           {error && (
             <div style={{
               padding: '10px 14px', borderRadius: 12,
-              background: 'rgba(255,59,48,0.12)', color: '#FF3B30',
+              background: 'rgba(255,69,58,0.12)', color: '#FF453A',
               fontSize: 13, lineHeight: 1.4,
-              border: '1px solid rgba(255,59,48,0.2)',
+              border: '1px solid rgba(255,69,58,0.2)',
             }}>
               {error}
             </div>
@@ -222,7 +223,7 @@ export default function LoginScreen({ onClose }) {
               opacity: loading ? 0.7 : 1,
               transition: 'opacity 0.15s',
               fontFamily: 'inherit',
-              boxShadow: '0 4px 18px rgba(10,132,255,0.4)',
+              boxShadow: '0 4px 18px rgba(0,122,255,0.4)',
             }}
           >
             {loading ? 'Please wait\u2026' : (mode === 'signin' ? 'Sign In' : 'Create Account')}

@@ -20,35 +20,26 @@ export default function Navbar({ user, onShowLogin }) {
     try { await logOut(); } catch (err) { console.warn('Logout failed:', err); }
   };
 
-  // User avatar: first letter of email/displayName or a person icon
   const avatarLetter = user?.displayName?.[0] || user?.email?.[0] || null;
   const photoURL = user?.photoURL;
 
   return (
     <>
-      {/* Desktop frosted glass header */}
+      {/* Desktop frosted glass header — iOS translucent nav */}
       <header
-        className="hidden md:flex items-center justify-between px-5 z-50 shrink-0"
-        style={{
-          height: 56,
-          background: 'rgba(10,10,15,0.85)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-        }}
+        className="hidden md:flex items-center justify-between px-6 z-50 shrink-0 glass-nav"
+        style={{ height: 56 }}
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <div
-            className="flex items-center justify-center"
+            className="flex items-center justify-center sky-gradient"
             style={{
-              width: 34, height: 34, borderRadius: 10,
-              background: 'var(--color-accent)',
-              boxShadow: '0 0 20px rgba(10,132,255,0.35)',
+              width: 32, height: 32, borderRadius: 8,
             }}
           >
-            <MdIcon name="flight" style={{ fontSize: 20, color: '#fff' }} />
+            <MdIcon name="flight" style={{ fontSize: 18, color: '#fff' }} />
           </div>
-          <span style={{ fontWeight: 800, fontSize: 18, letterSpacing: '-0.3px', color: 'var(--color-text-primary)' }}>
+          <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: '-0.3px', color: 'var(--color-text-primary)' }}>
             FlightWatch
           </span>
         </div>
@@ -65,9 +56,9 @@ export default function Navbar({ user, onShowLogin }) {
                   }`
                 }
                 style={({ isActive }) => ({
-                  borderRadius: 10,
+                  borderRadius: 12,
                   background: isActive ? 'var(--color-accent-dim)' : 'none',
-                  border: isActive ? '1px solid rgba(10,132,255,0.3)' : '1px solid transparent',
+                  border: isActive ? '1px solid rgba(0,122,255,0.3)' : '1px solid transparent',
                 })}
               >
                 <MdIcon name={link.icon} style={{ fontSize: 18 }} />
@@ -85,7 +76,7 @@ export default function Navbar({ user, onShowLogin }) {
                 style={{
                   width: 34, height: 34, borderRadius: 99,
                   background: photoURL ? 'none' : 'var(--color-accent-dim)',
-                  border: '1px solid rgba(10,132,255,0.3)',
+                  border: '1px solid rgba(0,122,255,0.3)',
                   cursor: 'pointer',
                   overflow: 'hidden',
                 }}
@@ -103,16 +94,16 @@ export default function Navbar({ user, onShowLogin }) {
             ) : (
               <button
                 onClick={onShowLogin}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold"
+                className="flex items-center gap-1.5 text-sm font-semibold"
                 style={{
-                  borderRadius: 10,
-                  background: 'var(--color-accent-dim)',
-                  border: '1px solid rgba(10,132,255,0.3)',
-                  color: 'var(--color-accent)',
+                  borderRadius: 999,
+                  background: 'var(--color-accent)',
+                  border: 'none',
+                  color: '#fff',
                   cursor: 'pointer',
+                  padding: '8px 20px',
                 }}
               >
-                <MdIcon name="person" style={{ fontSize: 16 }} />
                 Sign In
               </button>
             )}
@@ -143,7 +134,7 @@ export default function Navbar({ user, onShowLogin }) {
                         style={{
                           width: 36, height: 36, borderRadius: 99,
                           background: photoURL ? 'none' : 'var(--color-accent-dim)',
-                          border: '1px solid rgba(10,132,255,0.2)',
+                          border: '1px solid rgba(0,122,255,0.2)',
                           overflow: 'hidden',
                         }}
                       >
@@ -171,7 +162,7 @@ export default function Navbar({ user, onShowLogin }) {
                     onClick={handleLogout}
                     className="flex items-center gap-2.5 w-full text-left"
                     style={{
-                      padding: '10px 12px', borderRadius: 10,
+                      padding: '10px 12px', borderRadius: 12,
                       background: 'none', border: 'none', cursor: 'pointer',
                       color: 'var(--color-nogo)', fontSize: 14, fontWeight: 500,
                       fontFamily: 'inherit',
@@ -193,8 +184,8 @@ export default function Navbar({ user, onShowLogin }) {
         style={{
           height: 60,
           background: 'rgba(10,10,15,0.92)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderTop: '1px solid rgba(255,255,255,0.08)',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
@@ -266,7 +257,7 @@ export default function Navbar({ user, onShowLogin }) {
             style={{
               background: 'var(--color-bg-elevated)',
               borderTop: '1px solid rgba(255,255,255,0.10)',
-              borderRadius: '20px 20px 0 0',
+              borderRadius: '22px 22px 0 0',
               padding: '24px 20px',
               boxShadow: '0 -8px 40px rgba(0,0,0,0.5)',
             }}
@@ -280,7 +271,7 @@ export default function Navbar({ user, onShowLogin }) {
                 style={{
                   width: 48, height: 48, borderRadius: 99,
                   background: photoURL ? 'none' : 'var(--color-accent-dim)',
-                  border: '1px solid rgba(10,132,255,0.2)',
+                  border: '1px solid rgba(0,122,255,0.2)',
                   overflow: 'hidden',
                 }}
               >
@@ -306,10 +297,10 @@ export default function Navbar({ user, onShowLogin }) {
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold"
               style={{
-                borderRadius: 14,
-                background: 'rgba(255,59,48,0.12)',
-                border: '1px solid rgba(255,59,48,0.2)',
-                color: '#FF3B30',
+                borderRadius: 16,
+                background: 'rgba(255,69,58,0.12)',
+                border: '1px solid rgba(255,69,58,0.2)',
+                color: '#FF453A',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
               }}
