@@ -130,7 +130,7 @@ const useStore = create((set, get) => ({
       tailNumber: aircraft.tailNumber.toUpperCase(),
       icao24: aircraft.icao24?.toLowerCase() || '',
       nickname: aircraft.nickname || aircraft.tailNumber,
-      color: aircraft.color || '#0A84FF',
+      color: aircraft.color || '#007AFF',
       emoji: aircraft.emoji || '✈️',
       aircraftType: aircraft.aircraftType || '',
       fuelCapacity: aircraft.fuelCapacity || null,

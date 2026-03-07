@@ -5,10 +5,10 @@ function MdIcon({ name, style }) {
 }
 
 const icons = {
-  takeoff: { name: 'flight_takeoff', color: '#FF9500' },
+  takeoff: { name: 'flight_takeoff', color: '#FF9F0A' },
   landing: { name: 'flight_land', color: '#34C759' },
-  warning: { name: 'warning', color: '#FF3B30' },
-  info: { name: 'info', color: '#0A84FF' },
+  warning: { name: 'warning', color: '#FF453A' },
+  info: { name: 'info', color: '#007AFF' },
 };
 
 export default function ToastContainer() {

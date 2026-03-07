@@ -2,54 +2,59 @@
 @import "leaflet/dist/leaflet.css";
 
 /* ════════════════════════════════════════════════════════════
-   FLIGHTY-INSPIRED AVIATION DARK DESIGN SYSTEM
-   Premium iOS aesthetic · OLED blacks · Neon status accents
-   Adapted from SkyView/FlightScore for FlightWatch
+   FLIGHTWATCH — iOS-ALIGNED DESIGN SYSTEM
+   Apple HIG-inspired · OLED blacks · Semantic color roles
+   Sky gradient branding · 8pt spacing grid · Spring animations
 ════════════════════════════════════════════════════════════ */
 
 @theme {
-  /* Core palette — OLED-optimised */
+  /* Core palette — OLED-optimised with iOS system alignment */
   --color-bg: #000000;
   --color-bg-elevated: #0A0A0F;
   --color-card: #131317;
   --color-card-mid: #1C1C22;
   --color-card-high: #26262E;
 
-  /* Typography */
+  /* Typography — iOS semantic labels */
   --color-text-primary: #FFFFFF;
   --color-text-secondary: rgba(255,255,255,0.60);
   --color-text-tertiary: rgba(255,255,255,0.35);
 
-  /* Accent — iOS blue */
-  --color-accent: #0A84FF;
-  --color-accent-dim: rgba(10,132,255,0.15);
+  /* Accent — iOS system blue */
+  --color-accent: #007AFF;
+  --color-accent-dim: rgba(0,122,255,0.15);
 
-  /* Status colors */
+  /* Status colors — iOS system palette */
   --color-go: #34C759;
-  --color-caution: #FF9500;
-  --color-nogo: #FF3B30;
-  --color-lifr: #BF5AF2;
+  --color-caution: #FF9F0A;
+  --color-nogo: #FF453A;
+  --color-lifr: #5856D6;
 
-  /* Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  /* Brand gradient endpoints */
+  --color-sky-night: #001233;
+  --color-sky-horizon: #0077B6;
+  --color-sky-teal: #48CAE4;
+
+  /* Fonts — DM Sans for body, system fonts for display */
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
   --font-mono: 'Roboto Mono', 'SF Mono', monospace;
+  --font-display: 'DM Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* Legacy compatibility aliases for existing Tailwind classes */
   --color-navy: #0A0A0F;
   --color-navy-light: rgba(255,255,255,0.08);
   --color-navy-mid: #131317;
-  --color-amber: #0A84FF;
+  --color-amber: #007AFF;
   --color-amber-light: #3DA0FF;
   --color-sky: #FFFFFF;
   --color-sky-dim: rgba(255,255,255,0.60);
   --color-success: #34C759;
-  --color-warning: #FF9500;
-  --color-danger: #FF3B30;
-  --font-display: 'Inter', -apple-system, sans-serif;
-  --font-body: 'Inter', -apple-system, sans-serif;
+  --color-warning: #FF9F0A;
+  --color-danger: #FF453A;
 }
 
-* {
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -68,6 +73,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'cv11', 'ss01';
+  line-height: 1.5;
 }
 
 /* ── Material Symbols ── */
@@ -85,9 +91,17 @@ body {
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
 
-/* ── Interactive transitions ── */
-button, a { transition: opacity 0.15s ease, transform 0.15s ease; }
+/* ── Interactive transitions — iOS spring easing ── */
+button, a {
+  transition: opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 button:active { transform: scale(0.97); }
+
+/* ── Sky gradient — Brand hero gradient ── */
+.sky-gradient {
+  background: linear-gradient(160deg, #001233 0%, #023E8A 40%, #0077B6 70%, #48CAE4 100%);
+}
 
 /* ── Leaflet overrides ── */
 .leaflet-container {
@@ -112,9 +126,13 @@ button:active { transform: scale(0.97); }
   color: var(--color-accent) !important;
 }
 
-/* ── Animations ── */
+/* ── Animations — iOS spring easing ── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(60px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes slideUp {
@@ -139,11 +157,23 @@ button:active { transform: scale(0.97); }
   75% { transform: scale(1.06); }
   100% { transform: scale(1); opacity: 1; }
 }
+@keyframes floatDevice {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
 
-.toast-enter { animation: slideUp 0.4s ease-out; }
+.toast-enter { animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .toast-exit { animation: slideDown 0.3s ease-in forwards; }
-.liftoff-icon { animation: liftoff 0.6s ease-out; }
-.fade-in { animation: fadeIn 0.25s ease; }
+.liftoff-icon { animation: liftoff 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.fade-in { animation: fadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.float-device { animation: floatDevice 3s ease-in-out infinite; }
+
+/* Staggered fade-in delays */
+.fade-in-delay-1 { animation-delay: 0.1s; }
+.fade-in-delay-2 { animation-delay: 0.2s; }
+.fade-in-delay-3 { animation-delay: 0.3s; }
+.fade-in-delay-4 { animation-delay: 0.4s; }
 
 /* ── Pulse dot for airborne status ── */
 .pulse-dot {
@@ -161,14 +191,33 @@ button:active { transform: scale(0.97); }
   transition: transform 0.5s ease;
 }
 
-/* ── Glassmorphism utility ── */
+/* ── Glassmorphism utility — iOS vibrancy ── */
 .glass {
   background: rgba(10,10,15,0.65);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 14px;
+  border-radius: 16px;
+}
+
+/* ── Glass navigation bar — iOS translucent nav ── */
+.glass-nav {
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 /* ── Font utilities ── */
 .font-mono { font-family: var(--font-mono); }
+.font-display { font-family: var(--font-display); }
+
+/* ── Reduced motion support ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .float-device { animation: none; }
+}

@@ -79,7 +79,7 @@ function LiveTripBanner({ trip, onClick }) {
       onClick={onClick}
       className="w-full text-left transition-all mb-4"
       style={{
-        background: 'linear-gradient(135deg, rgba(52,199,89,0.12), rgba(10,132,255,0.12))',
+        background: 'linear-gradient(135deg, rgba(52,199,89,0.12), rgba(0,122,255,0.12))',
         border: '1px solid rgba(52,199,89,0.3)',
         borderRadius: 20,
         padding: '18px 20px',
@@ -150,7 +150,7 @@ export default function AircraftDetail() {
           className="px-4 py-2 text-sm font-medium"
           style={{
             background: 'var(--color-accent-dim)', color: 'var(--color-accent)',
-            borderRadius: 12, border: '1px solid rgba(10,132,255,0.3)', cursor: 'pointer', fontFamily: 'inherit',
+            borderRadius: 12, border: '1px solid rgba(0,122,255,0.3)', cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
           Back to Home
@@ -212,12 +212,12 @@ export default function AircraftDetail() {
               className="flex items-center justify-center"
               style={{
                 width: 36, height: 36, borderRadius: 10,
-                background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.2)',
+                background: 'rgba(255,69,58,0.1)', border: '1px solid rgba(255,69,58,0.2)',
                 cursor: 'pointer',
               }}
               title="Remove aircraft"
             >
-              <MdIcon name="delete" style={{ fontSize: 18, color: '#FF3B30' }} />
+              <MdIcon name="delete" style={{ fontSize: 18, color: '#FF453A' }} />
             </button>
           </div>
 

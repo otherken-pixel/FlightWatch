@@ -37,7 +37,7 @@ export default function TrackView() {
               background: 'var(--color-accent)',
               color: '#fff',
               borderRadius: 12,
-              boxShadow: '0 4px 18px rgba(10,132,255,0.4)',
+              boxShadow: '0 4px 18px rgba(0,122,255,0.4)',
             }}
           >
             <MdIcon name="add" style={{ fontSize: 18 }} />

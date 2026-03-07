@@ -51,7 +51,7 @@ export default function App() {
           style={{
             width: 52, height: 52, borderRadius: 16,
             background: 'var(--color-accent)',
-            boxShadow: '0 0 24px rgba(10,132,255,0.4)',
+            boxShadow: '0 0 24px rgba(0,122,255,0.4)',
           }}
         >
           <MdIcon name="flight" style={{ fontSize: 30, color: '#fff' }} />

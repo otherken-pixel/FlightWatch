@@ -12,7 +12,7 @@ function MdIcon({ name, style }) {
 function createPlaneIcon(heading = 0) {
   return L.divIcon({
     className: 'plane-marker',
-    html: `<div class="plane-icon" style="transform: rotate(${heading || 0}deg); color: #0A84FF;">
+    html: `<div class="plane-icon" style="transform: rotate(${heading || 0}deg); color: #007AFF;">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
         <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
       </svg>
@@ -112,7 +112,7 @@ export default function LiveTrack() {
           className="px-4 py-2 text-sm font-medium"
           style={{
             background: 'var(--color-accent-dim)', color: 'var(--color-accent)',
-            borderRadius: 12, border: '1px solid rgba(10,132,255,0.3)', cursor: 'pointer', fontFamily: 'inherit',
+            borderRadius: 12, border: '1px solid rgba(0,122,255,0.3)', cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
           Back to Home
@@ -169,7 +169,7 @@ export default function LiveTrack() {
           {trailPositions.length > 1 && (
             <Polyline
               positions={trailPositions}
-              pathOptions={{ color: '#0A84FF', weight: 3, opacity: 0.7 }}
+              pathOptions={{ color: '#007AFF', weight: 3, opacity: 0.7 }}
             />
           )}
 

@@ -9,7 +9,7 @@ function MdIcon({ name, style }) {
 function StatusBadge({ status }) {
   const config = {
     airborne: { bg: 'rgba(52,199,89,0.15)', color: '#34C759', label: 'Airborne', glow: '0 0 10px rgba(52,199,89,0.3)' },
-    taxiing: { bg: 'rgba(255,149,0,0.15)', color: '#FF9500', label: 'Taxiing', glow: 'none' },
+    taxiing: { bg: 'rgba(255,149,0,0.15)', color: '#FF9F0A', label: 'Taxiing', glow: 'none' },
     on_ground: { bg: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', label: 'On Ground', glow: 'none' },
     landed: { bg: 'rgba(52,199,89,0.15)', color: '#34C759', label: 'Landed', glow: 'none' },
     unknown: { bg: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', label: 'Unknown', glow: 'none' },

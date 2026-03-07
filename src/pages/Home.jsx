@@ -10,9 +10,9 @@ function MdIcon({ name, style }) {
 
 const statusColors = {
   airborne: '#34C759',
-  taxiing: '#FF9500',
+  taxiing: '#FF9F0A',
   on_ground: '#8E8E93',
-  landed: '#0A84FF',
+  landed: '#007AFF',
   unknown: '#636366',
 };
 
@@ -35,7 +35,7 @@ function AircraftCard({ aircraft, tripCount, activeTrip, onClick }) {
       style={{
         background: 'var(--color-card)',
         border: `1px solid ${isLive ? 'rgba(52,199,89,0.3)' : 'rgba(255,255,255,0.08)'}`,
-        borderRadius: 20,
+        borderRadius: 16,
         padding: '20px',
         cursor: 'pointer',
         fontFamily: 'inherit',
@@ -48,7 +48,7 @@ function AircraftCard({ aircraft, tripCount, activeTrip, onClick }) {
           <div
             className="flex items-center justify-center"
             style={{
-              width: 44, height: 44, borderRadius: 14,
+              width: 44, height: 44, borderRadius: 12,
               background: 'var(--color-card-mid)',
               fontSize: 22,
             }}
@@ -123,8 +123,8 @@ function AddAircraftCard({ onClick }) {
       className="w-full flex flex-col items-center justify-center gap-3 transition-all"
       style={{
         background: 'var(--color-card)',
-        border: '2px dashed rgba(10,132,255,0.3)',
-        borderRadius: 20,
+        border: '2px dashed rgba(0,122,255,0.3)',
+        borderRadius: 16,
         padding: '32px 20px',
         cursor: 'pointer',
         fontFamily: 'inherit',
@@ -136,7 +136,7 @@ function AddAircraftCard({ onClick }) {
         style={{
           width: 48, height: 48, borderRadius: 16,
           background: 'var(--color-accent-dim)',
-          border: '1px solid rgba(10,132,255,0.2)',
+          border: '1px solid rgba(0,122,255,0.2)',
         }}
       >
         <MdIcon name="add" style={{ fontSize: 28, color: 'var(--color-accent)' }} />
@@ -198,7 +198,7 @@ function AddAircraftModal({ onClose }) {
         style={{
           background: 'var(--color-bg-elevated)',
           border: '1px solid rgba(255,255,255,0.10)',
-          borderRadius: 24,
+          borderRadius: 22,
           padding: '28px 24px',
           boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
         }}
@@ -236,10 +236,10 @@ function AddAircraftModal({ onClose }) {
             style={{
               background: 'var(--color-accent)',
               color: '#fff',
-              borderRadius: 14,
+              borderRadius: 16,
               border: 'none',
               cursor: tail.trim() ? 'pointer' : 'not-allowed',
-              boxShadow: '0 4px 18px rgba(10,132,255,0.4)',
+              boxShadow: '0 4px 18px rgba(0,122,255,0.4)',
               fontFamily: 'inherit',
             }}
           >
@@ -285,16 +285,123 @@ export default function Home() {
   const getTripCount = (tailNumber) =>
     flightHistory.filter(t => t.tailNumber === tailNumber).length;
 
+  const liveCount = aircraft.filter(a => a.status === 'airborne' || a.status === 'taxiing').length;
+
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-4xl mx-auto p-5 pb-20 md:pb-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+      {/* Hero Section — Sky gradient with emotional headline */}
+      <div
+        className="sky-gradient"
+        style={{
+          padding: '48px 24px 40px',
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Subtle pattern overlay */}
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.03,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div
+            className="fade-in"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              backdropFilter: 'blur(8px)',
+              color: '#fff',
+              fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '5px 12px', borderRadius: 999,
+              marginBottom: 16,
+            }}
+          >
+            <MdIcon name="flight" style={{ fontSize: 14, color: '#90E0EF' }} />
+            Real-Time Flight Tracking
+          </div>
+
+          <h1
+            className="fade-in"
+            style={{
+              fontSize: 'clamp(28px, 5vw, 40px)',
+              fontWeight: 700,
+              color: '#fff',
+              lineHeight: 1.1,
+              letterSpacing: '-0.5px',
+              marginBottom: 12,
+            }}
+          >
+            Always know when<br />
+            they <span style={{ color: '#90E0EF' }}>land.</span>
+          </h1>
+
+          <p
+            className="fade-in"
+            style={{
+              color: 'rgba(255,255,255,0.7)',
+              fontSize: 15,
+              maxWidth: 400,
+              margin: '0 auto 24px',
+              lineHeight: 1.6,
+            }}
+          >
+            Peace of mind in your pocket. Track any aircraft worldwide with instant alerts.
+          </p>
+
+          {/* Stats row */}
+          <div
+            className="fade-in"
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 24,
+            }}
+          >
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: '#fff' }}>{aircraft.length}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                Aircraft
+              </div>
+            </div>
+            <div style={{ width: 1, background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch' }} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: liveCount > 0 ? '#34C759' : '#fff' }}>{liveCount}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                Live
+              </div>
+            </div>
+            <div style={{ width: 1, background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch' }} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: '#fff' }}>{flightHistory.length}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                Trips
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 pb-20 md:pb-8" style={{ marginTop: -16 }}>
+        {/* Header row — overlaps hero slightly */}
+        <div
+          className="flex items-center justify-between mb-5 fade-in"
+          style={{
+            background: 'var(--color-card)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 16,
+            padding: '16px 20px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          }}
+        >
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.3px' }}>
+            <h2 className="text-base font-bold" style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.2px' }}>
               My Aircraft
-            </h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--color-text-tertiary)' }}>
+            </h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
               {aircraft.length} {aircraft.length === 1 ? 'aircraft' : 'aircraft'} tracked
             </p>
           </div>
@@ -304,10 +411,10 @@ export default function Home() {
             style={{
               background: 'var(--color-accent)',
               color: '#fff',
-              borderRadius: 14,
+              borderRadius: 999,
               border: 'none',
               cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(10,132,255,0.35)',
+              boxShadow: '0 4px 16px rgba(0,122,255,0.35)',
               fontFamily: 'inherit',
             }}
           >
@@ -318,7 +425,7 @@ export default function Home() {
 
         {/* Card grid */}
         <div
-          className="grid gap-4"
+          className="grid gap-3"
           style={{
             gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
           }}
@@ -337,7 +444,7 @@ export default function Home() {
 
         {/* Empty state */}
         {aircraft.length === 0 && (
-          <div className="text-center mt-8">
+          <div className="text-center mt-8 fade-in">
             <div
               className="inline-flex items-center justify-center mb-4"
               style={{
