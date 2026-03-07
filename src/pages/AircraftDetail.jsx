@@ -21,7 +21,7 @@ function TripCard({ trip, onClick }) {
       style={{
         background: 'var(--color-card)',
         border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 18,
+        borderRadius: 16,
         padding: '16px 18px',
         cursor: 'pointer',
         fontFamily: 'inherit',
@@ -81,7 +81,7 @@ function LiveTripBanner({ trip, onClick }) {
       style={{
         background: 'linear-gradient(135deg, rgba(52,199,89,0.12), rgba(0,122,255,0.12))',
         border: '1px solid rgba(52,199,89,0.3)',
-        borderRadius: 20,
+        borderRadius: 16,
         padding: '18px 20px',
         cursor: 'pointer',
         fontFamily: 'inherit',
@@ -143,14 +143,20 @@ export default function AircraftDetail() {
   if (!ac) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-        <MdIcon name="flight_off" style={{ fontSize: 48, color: 'var(--color-text-tertiary)' }} />
+        <div
+          className="flex items-center justify-center"
+          style={{ width: 64, height: 64, borderRadius: 18, background: 'var(--color-accent-dim)' }}
+        >
+          <MdIcon name="flight_off" style={{ fontSize: 32, color: 'var(--color-accent)' }} />
+        </div>
         <p className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Aircraft not found</p>
         <button
           onClick={() => navigate('/')}
-          className="px-4 py-2 text-sm font-medium"
+          className="px-5 py-2.5 text-sm font-semibold"
           style={{
-            background: 'var(--color-accent-dim)', color: 'var(--color-accent)',
-            borderRadius: 12, border: '1px solid rgba(0,122,255,0.3)', cursor: 'pointer', fontFamily: 'inherit',
+            background: 'var(--color-accent)', color: '#fff',
+            borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+            boxShadow: '0 4px 16px rgba(0,122,255,0.35)',
           }}
         >
           Back to Home
@@ -167,41 +173,49 @@ export default function AircraftDetail() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-2xl mx-auto p-5 pb-20 md:pb-8">
-        {/* Back button + header */}
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-1 mb-4 text-sm font-medium"
-          style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontFamily: 'inherit' }}
-        >
-          <MdIcon name="arrow_back" style={{ fontSize: 18 }} />
-          My Aircraft
-        </button>
+      {/* Aircraft header with sky gradient */}
+      <div
+        className="sky-gradient"
+        style={{
+          padding: '32px 24px 28px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.03,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-2xl mx-auto">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-1 mb-4 text-sm font-medium"
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <MdIcon name="arrow_back" style={{ fontSize: 18 }} />
+            My Aircraft
+          </button>
 
-        {/* Aircraft header card */}
-        <div
-          className="mb-6 fade-in"
-          style={{
-            background: 'var(--color-card)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 22,
-            padding: '22px 24px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-          }}
-        >
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
                 className="flex items-center justify-center"
-                style={{ width: 52, height: 52, borderRadius: 16, background: 'var(--color-card-mid)', fontSize: 26 }}
+                style={{
+                  width: 56, height: 56, borderRadius: 16,
+                  background: 'rgba(255,255,255,0.12)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  fontSize: 28,
+                }}
               >
                 {ac.emoji}
               </div>
               <div>
-                <div className="text-xl font-bold" style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.3px' }}>
+                <div style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px' }}>
                   {ac.tailNumber}
                 </div>
-                <div className="text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>
                   {ac.nickname !== ac.tailNumber && <span>{ac.nickname} · </span>}
                   {ac.aircraftType || 'Aircraft'}
                 </div>
@@ -212,7 +226,7 @@ export default function AircraftDetail() {
               className="flex items-center justify-center"
               style={{
                 width: 36, height: 36, borderRadius: 10,
-                background: 'rgba(255,69,58,0.1)', border: '1px solid rgba(255,69,58,0.2)',
+                background: 'rgba(255,69,58,0.15)', border: '1px solid rgba(255,69,58,0.3)',
                 cursor: 'pointer',
               }}
               title="Remove aircraft"
@@ -221,14 +235,49 @@ export default function AircraftDetail() {
             </button>
           </div>
 
-          {/* Info row */}
-          <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
-            <span>ICAO: <span className="font-mono">{ac.icao24 || 'Not set'}</span></span>
-            <span>Last seen: {ac.lastSeen ? timeAgo(ac.lastSeen) : 'Never'}</span>
-            <span>{trips.length} {trips.length === 1 ? 'trip' : 'trips'}</span>
+          {/* Info chips */}
+          <div className="flex items-center gap-3 mt-4">
+            <div
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 999, padding: '4px 10px',
+                fontSize: 12, color: 'rgba(255,255,255,0.7)',
+              }}
+            >
+              <MdIcon name="tag" style={{ fontSize: 12 }} />
+              <span className="font-mono">{ac.icao24 || 'No ICAO'}</span>
+            </div>
+            <div
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 999, padding: '4px 10px',
+                fontSize: 12, color: 'rgba(255,255,255,0.7)',
+              }}
+            >
+              <MdIcon name="schedule" style={{ fontSize: 12 }} />
+              {ac.lastSeen ? timeAgo(ac.lastSeen) : 'Never seen'}
+            </div>
+            <div
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 999, padding: '4px 10px',
+                fontSize: 12, color: 'rgba(255,255,255,0.7)',
+              }}
+            >
+              <MdIcon name="route" style={{ fontSize: 12 }} />
+              {trips.length} {trips.length === 1 ? 'trip' : 'trips'}
+            </div>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-2xl mx-auto px-4 pb-20 md:pb-8" style={{ marginTop: -8 }}>
         {/* Live trip banner */}
         {activeTrip && (
           <LiveTripBanner
@@ -238,7 +287,7 @@ export default function AircraftDetail() {
         )}
 
         {/* Trip history */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 mt-2">
           <h2 className="text-base font-bold" style={{ color: 'var(--color-text-primary)' }}>
             Trip History
           </h2>
@@ -252,12 +301,17 @@ export default function AircraftDetail() {
             className="text-center py-12"
             style={{
               background: 'var(--color-card)',
-              borderRadius: 18,
+              borderRadius: 16,
               border: '1px solid rgba(255,255,255,0.06)',
             }}
           >
-            <MdIcon name="route" style={{ fontSize: 36, color: 'var(--color-text-tertiary)' }} />
-            <p className="text-sm mt-3" style={{ color: 'var(--color-text-tertiary)' }}>
+            <div
+              className="inline-flex items-center justify-center mb-3"
+              style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--color-accent-dim)' }}
+            >
+              <MdIcon name="route" style={{ fontSize: 24, color: 'var(--color-accent)' }} />
+            </div>
+            <p className="text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
               No trips recorded yet
             </p>
             <p className="text-xs mt-1" style={{ color: 'var(--color-text-tertiary)' }}>

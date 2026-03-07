@@ -191,12 +191,13 @@ export default function LiveTrack() {
         </MapContainer>
       </div>
 
-      {/* Bottom data strip */}
+      {/* Bottom data strip — glass */}
       <div
         className="shrink-0 px-4 py-3 overflow-x-auto"
         style={{
-          background: 'rgba(10,10,15,0.92)',
-          backdropFilter: 'blur(20px)',
+          background: 'linear-gradient(180deg, rgba(0,18,51,0.92) 0%, rgba(10,10,15,0.95) 100%)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderTop: '1px solid rgba(255,255,255,0.08)',
         }}
       >

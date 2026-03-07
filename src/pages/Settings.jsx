@@ -14,18 +14,21 @@ function Section({ title, icon, children }) {
       style={{
         background: 'var(--color-card)',
         border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 20,
+        borderRadius: 16,
         padding: '18px 20px',
-        boxShadow: '0 2px 16px rgba(0,0,0,0.35)',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
       }}
     >
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2.5 mb-4">
         {icon && (
-          <div className="flex items-center justify-center" style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--color-accent-dim)' }}>
-            <MdIcon name={icon} style={{ fontSize: 16, color: 'var(--color-accent)' }} />
+          <div className="flex items-center justify-center" style={{
+            width: 28, height: 28, borderRadius: 8,
+            background: 'linear-gradient(135deg, rgba(0,119,182,0.2), rgba(72,202,228,0.2))',
+          }}>
+            <MdIcon name={icon} style={{ fontSize: 16, color: '#48CAE4' }} />
           </div>
         )}
-        <h3 className="fy-section-label" style={{ margin: 0 }}>{title}</h3>
+        <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)', margin: 0 }}>{title}</h3>
       </div>
       {children}
     </div>
@@ -64,8 +67,8 @@ function Toggle({ label, checked, onChange }) {
         className="relative transition-colors"
         style={{
           width: 44, height: 24, borderRadius: 99,
-          background: checked ? 'var(--color-accent)' : 'var(--color-card-high)',
-          boxShadow: checked ? '0 0 10px rgba(0,122,255,0.3)' : 'none',
+          background: checked ? '#34C759' : 'var(--color-card-high)',
+          boxShadow: checked ? '0 0 10px rgba(52,199,89,0.3)' : 'none',
         }}
       >
         <span
@@ -135,9 +138,46 @@ export default function Settings() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-2xl mx-auto p-5 pb-20 md:pb-8">
-        <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.3px' }}>Settings</h1>
+      {/* Page header with sky gradient */}
+      <div
+        className="sky-gradient"
+        style={{
+          padding: '40px 24px 32px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.03,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-2xl mx-auto">
+          <div
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              backdropFilter: 'blur(8px)',
+              color: '#fff',
+              fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '4px 10px', borderRadius: 999,
+              marginBottom: 12,
+            }}
+          >
+            <MdIcon name="tune" style={{ fontSize: 13, color: '#90E0EF' }} />
+            Configuration
+          </div>
+          <h1 style={{
+            fontSize: 28, fontWeight: 700, color: '#fff',
+            letterSpacing: '-0.5px', lineHeight: 1.1,
+          }}>
+            Settings
+          </h1>
+        </div>
+      </div>
 
+      <div className="max-w-2xl mx-auto px-4 pb-20 md:pb-8" style={{ marginTop: -12 }}>
         {/* Add Aircraft */}
         <Section title="Add Aircraft" icon="add_circle">
           <Input label="Tail Number *" value={newTail} onChange={handleTailChange} placeholder="N12345" />
@@ -159,7 +199,7 @@ export default function Settings() {
             style={{
               background: 'var(--color-accent)',
               color: '#fff',
-              borderRadius: 12,
+              borderRadius: 999,
               border: 'none',
               boxShadow: '0 4px 18px rgba(0,122,255,0.4)',
             }}
@@ -180,7 +220,7 @@ export default function Settings() {
                   className="flex items-center gap-3 p-3"
                   style={{
                     background: 'var(--color-card-mid)',
-                    borderRadius: 14,
+                    borderRadius: 12,
                     border: '1px solid rgba(255,255,255,0.06)',
                   }}
                 >
@@ -209,7 +249,7 @@ export default function Settings() {
             onClick={handleEnableNotifications}
             className="w-full py-2.5 mb-3 text-sm font-medium transition-colors"
             style={{
-              background: 'var(--color-card-high)',
+              background: 'var(--color-card-mid)',
               color: 'var(--color-text-primary)',
               borderRadius: 12,
               border: '1px solid rgba(255,255,255,0.08)',
@@ -254,7 +294,7 @@ export default function Settings() {
                   className="flex-1 py-2.5 text-sm font-semibold capitalize transition-all"
                   style={{
                     borderRadius: 12,
-                    background: settings.mapStyle === style ? 'var(--color-accent)' : 'var(--color-card-high)',
+                    background: settings.mapStyle === style ? 'var(--color-accent)' : 'var(--color-card-mid)',
                     color: settings.mapStyle === style ? '#fff' : 'var(--color-text-secondary)',
                     border: settings.mapStyle === style ? 'none' : '1px solid rgba(255,255,255,0.08)',
                     boxShadow: settings.mapStyle === style ? '0 4px 12px rgba(0,122,255,0.3)' : 'none',
@@ -280,7 +320,7 @@ export default function Settings() {
                   className="flex-1 py-2.5 text-sm font-semibold transition-all"
                   style={{
                     borderRadius: 12,
-                    background: settings.pollInterval === opt.value ? 'var(--color-accent)' : 'var(--color-card-high)',
+                    background: settings.pollInterval === opt.value ? 'var(--color-accent)' : 'var(--color-card-mid)',
                     color: settings.pollInterval === opt.value ? '#fff' : 'var(--color-text-secondary)',
                     border: settings.pollInterval === opt.value ? 'none' : '1px solid rgba(255,255,255,0.08)',
                     boxShadow: settings.pollInterval === opt.value ? '0 4px 12px rgba(0,122,255,0.3)' : 'none',
