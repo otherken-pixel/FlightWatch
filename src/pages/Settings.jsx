@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import useStore from '../store/useStore';
 import { requestNotificationPermission } from '../utils/notifications';
+import { isValidNNumber, nNumberToIcao24 } from '../utils/nNumberToIcao';
 
 function MdIcon({ name, style }) {
   return <span className="material-symbols-rounded" style={style}>{name}</span>;
@@ -91,8 +92,24 @@ export default function Settings() {
 
   const [newTail, setNewTail] = useState('');
   const [newIcao, setNewIcao] = useState('');
+  const [icaoAuto, setIcaoAuto] = useState(false);
   const [newNickname, setNewNickname] = useState('');
   const [newType, setNewType] = useState('');
+
+  const handleTailChange = (val) => {
+    setNewTail(val);
+    if (isValidNNumber(val)) {
+      const hex = nNumberToIcao24(val);
+      if (hex) { setNewIcao(hex); setIcaoAuto(true); }
+    } else if (icaoAuto) {
+      setNewIcao(''); setIcaoAuto(false);
+    }
+  };
+
+  const handleIcaoChange = (val) => {
+    setNewIcao(val);
+    setIcaoAuto(false);
+  };
 
   const handleAddAircraft = () => {
     if (!newTail.trim()) return;
@@ -123,8 +140,8 @@ export default function Settings() {
 
         {/* Add Aircraft */}
         <Section title="Add Aircraft" icon="add_circle">
-          <Input label="Tail Number *" value={newTail} onChange={setNewTail} placeholder="N12345" />
-          <Input label="ICAO24 Hex Code" value={newIcao} onChange={setNewIcao} placeholder="a1b2c3 (required for tracking)" />
+          <Input label="Tail Number *" value={newTail} onChange={handleTailChange} placeholder="N12345" />
+          <Input label="ICAO24 Hex Code" value={newIcao} onChange={handleIcaoChange} placeholder="a1b2c3 (required for tracking)" />
           <Input label="Nickname" value={newNickname} onChange={setNewNickname} placeholder="Dad's Cessna" />
           <Input label="Aircraft Type" value={newType} onChange={setNewType} placeholder="Cessna 172" />
           <p className="text-xs mb-3" style={{ color: 'var(--color-text-tertiary)' }}>
