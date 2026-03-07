@@ -53,9 +53,9 @@ function StatChip({ icon, label, value }) {
     <div
       className="flex flex-col items-center px-3 py-2"
       style={{
-        background: 'var(--color-card)',
+        background: 'rgba(0,18,51,0.5)',
         borderRadius: 14,
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid rgba(72,202,228,0.12)',
         minWidth: 80,
       }}
     >
@@ -191,14 +191,15 @@ export default function LiveTrack() {
         </MapContainer>
       </div>
 
-      {/* Bottom data strip — glass */}
+      {/* Bottom data strip — sky gradient glass */}
       <div
         className="shrink-0 px-4 py-3 overflow-x-auto"
         style={{
-          background: 'linear-gradient(180deg, rgba(0,18,51,0.92) 0%, rgba(10,10,15,0.95) 100%)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          background: 'linear-gradient(180deg, rgba(0,18,51,0.90) 0%, rgba(2,62,138,0.93) 50%, rgba(0,119,182,0.88) 100%)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          borderTop: '1px solid rgba(72,202,228,0.15)',
+          boxShadow: '0 -4px 20px rgba(0,18,51,0.5)',
         }}
       >
         {/* Info row */}

@@ -178,16 +178,17 @@ export default function Navbar({ user, onShowLogin }) {
         </div>
       </header>
 
-      {/* Mobile bottom nav — frosted glass */}
+      {/* Mobile bottom nav — sky gradient glass */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center"
         style={{
-          height: 60,
-          background: 'rgba(10,10,15,0.92)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          height: 64,
+          background: 'linear-gradient(180deg, rgba(0,18,51,0.88) 0%, rgba(2,62,138,0.92) 50%, rgba(0,119,182,0.85) 100%)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          borderTop: '1px solid rgba(72,202,228,0.15)',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          boxShadow: '0 -4px 20px rgba(0,18,51,0.5)',
         }}
       >
         {links.map(link => (
@@ -206,14 +207,15 @@ export default function Navbar({ user, onShowLogin }) {
                 <div
                   className="flex items-center justify-center"
                   style={{
-                    width: 36, height: 32, borderRadius: 10,
-                    background: isActive ? 'var(--color-accent-dim)' : 'transparent',
-                    transition: 'background 0.15s',
+                    width: 40, height: 32, borderRadius: 12,
+                    background: isActive ? 'rgba(72,202,228,0.2)' : 'transparent',
+                    border: isActive ? '1px solid rgba(72,202,228,0.25)' : '1px solid transparent',
+                    transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }}
                 >
-                  <MdIcon name={link.icon} style={{ fontSize: 22 }} />
+                  <MdIcon name={link.icon} style={{ fontSize: 22, color: isActive ? '#48CAE4' : 'rgba(255,255,255,0.45)' }} />
                 </div>
-                {link.label}
+                <span style={{ color: isActive ? '#48CAE4' : 'rgba(255,255,255,0.45)' }}>{link.label}</span>
               </>
             )}
           </NavLink>
@@ -224,7 +226,7 @@ export default function Navbar({ user, onShowLogin }) {
           className="flex flex-col items-center gap-1 py-2 text-[10px] font-semibold"
           style={{
             letterSpacing: '0.3px',
-            color: user ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+            color: user ? '#48CAE4' : 'rgba(255,255,255,0.45)',
             background: 'none', border: 'none', cursor: 'pointer',
             fontFamily: 'inherit',
           }}
@@ -232,16 +234,17 @@ export default function Navbar({ user, onShowLogin }) {
           <div
             className="flex items-center justify-center"
             style={{
-              width: 36, height: 32, borderRadius: 10,
-              background: user ? 'var(--color-accent-dim)' : 'transparent',
-              transition: 'background 0.15s',
+              width: 40, height: 32, borderRadius: 12,
+              background: user ? 'rgba(72,202,228,0.2)' : 'transparent',
+              border: user ? '1px solid rgba(72,202,228,0.25)' : '1px solid transparent',
+              transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
               overflow: 'hidden',
             }}
           >
             {user?.photoURL ? (
               <img src={user.photoURL} alt="" style={{ width: 22, height: 22, borderRadius: 99, objectFit: 'cover' }} referrerPolicy="no-referrer" />
             ) : (
-              <MdIcon name="person" style={{ fontSize: 22 }} />
+              <MdIcon name="person" style={{ fontSize: 22, color: 'rgba(255,255,255,0.45)' }} />
             )}
           </div>
           {user ? 'Account' : 'Sign In'}
@@ -253,13 +256,15 @@ export default function Navbar({ user, onShowLogin }) {
         <div className="md:hidden fixed inset-0 z-[700]">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowUserMenu(false)} />
           <div
-            className="absolute bottom-14 left-0 right-0 fade-in"
+            className="absolute bottom-16 left-0 right-0 fade-in"
             style={{
-              background: 'var(--color-bg-elevated)',
-              borderTop: '1px solid rgba(255,255,255,0.10)',
+              background: 'linear-gradient(180deg, rgba(0,18,51,0.95) 0%, rgba(2,62,138,0.97) 100%)',
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+              borderTop: '1px solid rgba(72,202,228,0.15)',
               borderRadius: '22px 22px 0 0',
               padding: '24px 20px',
-              boxShadow: '0 -8px 40px rgba(0,0,0,0.5)',
+              boxShadow: '0 -8px 40px rgba(0,18,51,0.6)',
             }}
           >
             <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: 'rgba(255,255,255,0.15)' }} />
