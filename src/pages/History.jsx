@@ -12,16 +12,67 @@ export default function History() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-2xl mx-auto p-5 pb-20 md:pb-8">
-        <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.3px' }}>
-          Flight History
-        </h1>
+      {/* Page header with sky gradient */}
+      <div
+        className="sky-gradient"
+        style={{
+          padding: '40px 24px 32px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.03,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-2xl mx-auto">
+          <div
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,255,255,0.12)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              backdropFilter: 'blur(8px)',
+              color: '#fff',
+              fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '4px 10px', borderRadius: 999,
+              marginBottom: 12,
+            }}
+          >
+            <MdIcon name="history" style={{ fontSize: 13, color: '#90E0EF' }} />
+            Flight Log
+          </div>
+          <h1 style={{
+            fontSize: 28, fontWeight: 700, color: '#fff',
+            letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: 4,
+          }}>
+            Flight History
+          </h1>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>
+            {flightHistory.length} {flightHistory.length === 1 ? 'flight' : 'flights'} recorded
+          </p>
+        </div>
+      </div>
 
+      <div className="max-w-2xl mx-auto px-4 pb-20 md:pb-8" style={{ marginTop: -12 }}>
         {flightHistory.length === 0 ? (
-          <div className="text-center py-12">
-            <MdIcon name="history" style={{ fontSize: 48, color: 'var(--color-text-tertiary)', opacity: 0.3, marginBottom: 16 }} />
+          <div
+            className="text-center py-16 fade-in"
+            style={{
+              background: 'var(--color-card)',
+              borderRadius: 16,
+              border: '1px solid rgba(255,255,255,0.08)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            }}
+          >
+            <div
+              className="inline-flex items-center justify-center mb-4"
+              style={{ width: 64, height: 64, borderRadius: 18, background: 'var(--color-accent-dim)' }}
+            >
+              <MdIcon name="history" style={{ fontSize: 32, color: 'var(--color-accent)' }} />
+            </div>
             <h3 className="text-base font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>No Flights Recorded</h3>
-            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)', maxWidth: 280, margin: '0 auto' }}>
               Flights will appear here automatically when tracked aircraft take off and land.
             </p>
           </div>
@@ -42,7 +93,7 @@ export default function History() {
                   style={{
                     background: 'var(--color-card)',
                     border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 18,
+                    borderRadius: 16,
                     padding: '16px 18px',
                     boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
                     cursor: 'pointer',
@@ -52,7 +103,7 @@ export default function History() {
                   {/* Header */}
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-lg">{flight.emoji || '✈️'}</span>
+                      <span className="text-lg">{flight.emoji || '\u2708\uFE0F'}</span>
                       <div>
                         <span className="font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>
                           {flight.nickname || flight.tailNumber}

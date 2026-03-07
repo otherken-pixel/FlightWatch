@@ -72,14 +72,20 @@ export default function TripDetail() {
   if (!trip) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-        <MdIcon name="route" style={{ fontSize: 48, color: 'var(--color-text-tertiary)' }} />
+        <div
+          className="flex items-center justify-center"
+          style={{ width: 64, height: 64, borderRadius: 18, background: 'var(--color-accent-dim)' }}
+        >
+          <MdIcon name="route" style={{ fontSize: 32, color: 'var(--color-accent)' }} />
+        </div>
         <p className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Trip not found</p>
         <button
           onClick={() => navigate('/')}
-          className="px-4 py-2 text-sm font-medium"
+          className="px-5 py-2.5 text-sm font-semibold"
           style={{
-            background: 'var(--color-accent-dim)', color: 'var(--color-accent)',
-            borderRadius: 12, border: '1px solid rgba(0,122,255,0.3)', cursor: 'pointer', fontFamily: 'inherit',
+            background: 'var(--color-accent)', color: '#fff',
+            borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+            boxShadow: '0 4px 16px rgba(0,122,255,0.35)',
           }}
         >
           Back to Home
@@ -94,78 +100,84 @@ export default function TripDetail() {
   const maxSpd = trip.maxSpeed ? msToKnots(trip.maxSpeed) : 0;
   const duration = trip.duration ? formatDuration(trip.duration) : '--';
 
-  // Get mid-flight snapshot from trail midpoint
   const midPoint = trip.trail && trip.trail.length > 2
     ? trip.trail[Math.floor(trip.trail.length / 2)]
     : null;
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-3xl mx-auto p-5 pb-20 md:pb-8">
-        {/* Back button */}
-        <button
-          onClick={() => navigate(`/aircraft/${encodeURIComponent(trip.tailNumber)}`)}
-          className="flex items-center gap-1 mb-4 text-sm font-medium"
-          style={{ background: 'none', border: 'none', color: 'var(--color-accent)', cursor: 'pointer', fontFamily: 'inherit' }}
-        >
-          <MdIcon name="arrow_back" style={{ fontSize: 18 }} />
-          {trip.tailNumber}
-        </button>
+      {/* Route header with sky gradient */}
+      <div
+        className="sky-gradient"
+        style={{
+          padding: '32px 24px 28px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.03,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-3xl mx-auto">
+          <button
+            onClick={() => navigate(`/aircraft/${encodeURIComponent(trip.tailNumber)}`)}
+            className="flex items-center gap-1 mb-4 text-sm font-medium"
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <MdIcon name="arrow_back" style={{ fontSize: 18 }} />
+            {trip.tailNumber}
+          </button>
 
-        {/* Route header */}
-        <div
-          className="mb-5 fade-in"
-          style={{
-            background: 'var(--color-card)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 22,
-            padding: '22px 24px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-          }}
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg">{trip.emoji || '✈️'}</span>
-            <span className="text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">{trip.emoji || '\u2708\uFE0F'}</span>
+            <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>
               {trip.nickname || trip.tailNumber}
             </span>
           </div>
-          <div className="flex items-center gap-3 mt-3">
+
+          {/* Route display */}
+          <div className="flex items-center gap-3">
             <div className="text-center">
-              <div className="text-2xl font-bold font-mono" style={{ color: 'var(--color-text-primary)' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px', fontFamily: 'var(--font-mono)' }}>
                 {departureLabel}
               </div>
-              <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
+              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
                 Departure
               </div>
             </div>
             <div className="flex-1 flex items-center gap-1">
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
-              <MdIcon name="flight" style={{ fontSize: 20, color: 'var(--color-accent)', transform: 'rotate(90deg)' }} />
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
+              <MdIcon name="flight" style={{ fontSize: 20, color: '#90E0EF', transform: 'rotate(90deg)' }} />
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold font-mono" style={{ color: 'var(--color-text-primary)' }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px', fontFamily: 'var(--font-mono)' }}>
                 {arrivalLabel}
               </div>
-              <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
+              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
                 Arrival
               </div>
             </div>
           </div>
-          <div className="text-xs mt-3 text-center" style={{ color: 'var(--color-text-tertiary)' }}>
+
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 12, textAlign: 'center' }}>
             {trip.startedAt && new Date(trip.startedAt).toLocaleDateString(undefined, {
               weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
               hour: '2-digit', minute: '2-digit',
             })}
           </div>
         </div>
+      </div>
 
+      <div className="max-w-3xl mx-auto px-4 pb-20 md:pb-8" style={{ marginTop: -8 }}>
         {/* Map */}
         {trailPositions.length > 1 && (
           <div
-            className="mb-5 fade-in overflow-hidden"
+            className="mb-4 fade-in overflow-hidden"
             style={{
-              borderRadius: 20,
+              borderRadius: 16,
               border: '1px solid rgba(255,255,255,0.08)',
               height: 320,
               boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
@@ -182,9 +194,7 @@ export default function TripDetail() {
                 positions={trailPositions}
                 pathOptions={{ color: '#007AFF', weight: 3, opacity: 0.8 }}
               />
-              {/* Departure marker */}
               <Marker position={trailPositions[0]} icon={createEndpointIcon('departure')} />
-              {/* Arrival marker */}
               <Marker position={trailPositions[trailPositions.length - 1]} icon={createEndpointIcon('arrival')} />
             </MapContainer>
           </div>
@@ -192,11 +202,11 @@ export default function TripDetail() {
 
         {/* Flight stats */}
         <div
-          className="mb-5 fade-in"
+          className="mb-4 fade-in"
           style={{
             background: 'var(--color-card)',
             border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 18,
+            borderRadius: 16,
             padding: '4px 18px',
           }}
         >
@@ -210,7 +220,7 @@ export default function TripDetail() {
               {midPoint.state.heading != null && (
                 <DataRow
                   label="Heading (mid-flight)"
-                  value={`${Math.round(midPoint.state.heading)}° ${headingToCompass(midPoint.state.heading)}`}
+                  value={`${Math.round(midPoint.state.heading)}\u00B0 ${headingToCompass(midPoint.state.heading)}`}
                   icon="explore"
                   mono
                 />

@@ -43,20 +43,23 @@ export default function App() {
   if (authLoading) {
     return (
       <div
-        className="h-full flex flex-col items-center justify-center gap-4"
-        style={{ background: 'var(--color-bg-elevated)' }}
+        className="h-full flex flex-col items-center justify-center gap-5 sky-gradient"
       >
         <div
           className="flex items-center justify-center"
           style={{
-            width: 52, height: 52, borderRadius: 16,
-            background: 'var(--color-accent)',
-            boxShadow: '0 0 24px rgba(0,122,255,0.4)',
+            width: 64, height: 64, borderRadius: 18,
+            background: 'rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.2)',
           }}
         >
-          <MdIcon name="flight" style={{ fontSize: 30, color: '#fff' }} />
+          <MdIcon name="flight" style={{ fontSize: 34, color: '#fff' }} />
         </div>
-        <div style={{ color: 'var(--color-text-tertiary)', fontSize: 14 }}>Loading...</div>
+        <div>
+          <div style={{ color: '#fff', fontSize: 20, fontWeight: 700, textAlign: 'center', letterSpacing: '-0.3px' }}>FlightWatch</div>
+          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, textAlign: 'center', marginTop: 4 }}>Loading...</div>
+        </div>
       </div>
     );
   }
