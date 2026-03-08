@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - claude/flightwatch-tracking-app-1uGzq
 
 jobs:
   build-and-deploy:
