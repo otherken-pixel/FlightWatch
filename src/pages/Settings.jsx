@@ -93,35 +93,19 @@ export default function Settings() {
   const addToast = useStore(s => s.addToast);
 
   const [newTail, setNewTail] = useState('');
-  const [newIcao, setNewIcao] = useState('');
-  const [icaoAuto, setIcaoAuto] = useState(false);
   const [newNickname, setNewNickname] = useState('');
   const [newType, setNewType] = useState('');
 
-  const handleTailChange = (val) => {
-    setNewTail(val);
-    if (isValidNNumber(val)) {
-      const hex = nNumberToIcao24(val);
-      if (hex) { setNewIcao(hex); setIcaoAuto(true); }
-    } else if (icaoAuto) {
-      setNewIcao(''); setIcaoAuto(false);
-    }
-  };
-
-  const handleIcaoChange = (val) => {
-    setNewIcao(val);
-    setIcaoAuto(false);
-  };
-
   const handleAddAircraft = () => {
     if (!newTail.trim()) return;
+    const icao = isValidNNumber(newTail.trim()) ? (nNumberToIcao24(newTail.trim()) || '') : '';
     addAircraft({
       tailNumber: newTail.trim(),
-      icao24: newIcao.trim(),
+      icao24: icao,
       nickname: newNickname.trim() || newTail.trim(),
       aircraftType: newType.trim(),
     });
-    setNewTail(''); setNewIcao(''); setNewNickname(''); setNewType('');
+    setNewTail(''); setNewNickname(''); setNewType('');
     addToast({ type: 'info', title: 'Aircraft Added', message: `Now tracking ${newTail.trim().toUpperCase()}` });
   };
 
@@ -135,29 +119,22 @@ export default function Settings() {
   return (
     <div className="flex-1 overflow-y-auto">
       {/* Page header */}
-      <div className="sky-gradient" style={{ padding: '36px 24px 28px', position: 'relative' }}>
-        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-2xl mx-auto">
+      <div className="sky-gradient" style={{ padding: '40px 24px 24px', position: 'relative' }}>
+        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-3xl mx-auto">
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px', lineHeight: 1.1 }}>
             Settings
           </h1>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pb-24 md:pb-8" style={{ marginTop: -10 }}>
+      <div className="max-w-3xl mx-auto px-4 md:px-8 pb-24 md:pb-8 mt-4">
         {/* ── Add Aircraft ── */}
         <SectionHeader>Add Aircraft</SectionHeader>
         <GroupedSection>
-          <InputRow label="Tail Number *" value={newTail} onChange={handleTailChange} placeholder="N12345" />
-          <InputRow label="ICAO24 Hex Code" value={newIcao} onChange={handleIcaoChange} placeholder="a1b2c3 (required for tracking)" />
+          <InputRow label="Tail Number *" value={newTail} onChange={setNewTail} placeholder="N12345" />
           <InputRow label="Nickname" value={newNickname} onChange={setNewNickname} placeholder="Dad's Cessna" />
           <InputRow label="Aircraft Type" value={newType} onChange={setNewType} placeholder="Cessna 172" />
           <Row style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
-            <p className="text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>
-              Find ICAO24 codes at{' '}
-              <a href="https://opensky-network.org/aircraft-database" target="_blank" rel="noopener" style={{ color: 'var(--color-accent)' }}>
-                OpenSky Database
-              </a>
-            </p>
             <button
               onClick={handleAddAircraft}
               disabled={!newTail.trim()}
@@ -248,6 +225,18 @@ export default function Settings() {
         {/* ── Display ── */}
         <SectionHeader>Display</SectionHeader>
         <GroupedSection>
+          <Row style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
+            <span className="text-[12px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>Appearance</span>
+            <SegmentedControl
+              options={[
+                { value: 'system', label: 'System' },
+                { value: 'light', label: 'Light' },
+                { value: 'dark', label: 'Dark' },
+              ]}
+              value={settings.theme || 'system'}
+              onChange={v => updateSettings({ theme: v })}
+            />
+          </Row>
           <Row style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
             <span className="text-[12px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>Map Style</span>
             <SegmentedControl

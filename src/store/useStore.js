@@ -28,6 +28,16 @@ function debouncedFirestoreSave(uid, dataFn) {
   }, 1500);
 }
 
+// Immediate Firestore save for critical changes (aircraft add/remove)
+function immediateFirestoreSave(uid, dataFn, onError) {
+  clearTimeout(firestoreSaveTimeout);
+  const data = dataFn();
+  saveUserData(uid, { ...data, updatedAt: Date.now() }).catch((err) => {
+    console.warn('[FlightWatch] Cloud save failed:', err);
+    if (onError) onError(err);
+  });
+}
+
 const useStore = create((set, get) => ({
   // Current authenticated user (null = guest)
   currentUser: null,
@@ -74,6 +84,7 @@ const useStore = create((set, get) => ({
     mapStyle: 'dark',
     units: 'aviation',
     pollInterval: 10000,
+    theme: 'system',
   }),
 
   // Auth: set user and load cloud data
@@ -84,11 +95,11 @@ const useStore = create((set, get) => ({
       const data = await loadUserData(uid);
       if (!data) return;
       const updates = {};
-      if (data.aircraft && data.aircraft.length > 0) {
+      if (Array.isArray(data.aircraft)) {
         updates.aircraft = data.aircraft;
         saveToStorage('aircraft', data.aircraft);
       }
-      if (data.flightHistory && data.flightHistory.length > 0) {
+      if (Array.isArray(data.flightHistory)) {
         updates.flightHistory = data.flightHistory;
         saveToStorage('history', data.flightHistory);
       }
@@ -107,10 +118,15 @@ const useStore = create((set, get) => ({
       if (Object.keys(updates).length > 0) set(updates);
     } catch (err) {
       console.warn('[FlightWatch] Failed to load cloud data:', err);
+      get().addToast({
+        type: 'error',
+        title: 'Cloud Sync Error',
+        message: 'Could not load your data from the cloud.',
+      });
     }
   },
 
-  // Save all persistable data to Firestore
+  // Save all persistable data to Firestore (debounced for frequent changes)
   syncToCloud: () => {
     const { currentUser, aircraft, flightHistory, notifications, apiKeys, settings } = get();
     if (!currentUser) return;
@@ -121,6 +137,25 @@ const useStore = create((set, get) => ({
       apiKeys,
       settings,
     }));
+  },
+
+  // Immediate save for critical changes (aircraft add/remove)
+  syncToCloudNow: () => {
+    const { currentUser, aircraft, flightHistory, notifications, apiKeys, settings } = get();
+    if (!currentUser) return;
+    immediateFirestoreSave(currentUser.uid, () => ({
+      aircraft,
+      flightHistory,
+      notifications,
+      apiKeys,
+      settings,
+    }), (err) => {
+      get().addToast({
+        type: 'error',
+        title: 'Sync Failed',
+        message: 'Could not save to cloud. Changes saved locally.',
+      });
+    });
   },
 
   // Actions
@@ -141,21 +176,21 @@ const useStore = create((set, get) => ({
     }];
     saveToStorage('aircraft', list);
     set({ aircraft: list });
-    get().syncToCloud();
+    get().syncToCloudNow();
   },
 
   removeAircraft: (id) => {
     const list = get().aircraft.filter(a => a.id !== id);
     saveToStorage('aircraft', list);
     set({ aircraft: list });
-    get().syncToCloud();
+    get().syncToCloudNow();
   },
 
   updateAircraft: (id, updates) => {
     const list = get().aircraft.map(a => a.id === id ? { ...a, ...updates } : a);
     saveToStorage('aircraft', list);
     set({ aircraft: list });
-    get().syncToCloud();
+    get().syncToCloudNow();
   },
 
   setSelectedTail: (tail) => set({ selectedTail: tail }),
@@ -247,7 +282,7 @@ const useStore = create((set, get) => ({
     const history = [completedTrip, ...get().flightHistory].slice(0, 200);
     saveToStorage('history', history);
     set({ flightHistory: history, activeTrips });
-    get().syncToCloud();
+    get().syncToCloudNow();
   },
 
   // Get active trip for a tail number

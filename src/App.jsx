@@ -22,7 +22,17 @@ export default function App() {
   const { user, loading: authLoading } = useAuth();
   const setCurrentUser = useStore(s => s.setCurrentUser);
   const loadCloudData = useStore(s => s.loadCloudData);
+  const theme = useStore(s => s.settings.theme) || 'system';
   const [showLogin, setShowLogin] = useState(false);
+
+  // Apply theme class to document root
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    if (theme === 'light' || theme === 'dark') {
+      root.classList.add(theme);
+    }
+  }, [theme]);
 
   // Start polling for tracked aircraft
   usePoller();

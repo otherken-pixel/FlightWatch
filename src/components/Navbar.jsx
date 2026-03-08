@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { logOut } from '../services/auth';
+import useStore from '../store/useStore';
 
 const links = [
   { to: '/', icon: 'flight', label: 'Aircraft' },
@@ -14,6 +15,15 @@ function MdIcon({ name, style, className = '' }) {
 
 export default function Navbar({ user, onShowLogin }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const theme = useStore(s => s.settings.theme) || 'system';
+  const updateSettings = useStore(s => s.updateSettings);
+
+  const cycleTheme = () => {
+    const next = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system';
+    updateSettings({ theme: next });
+  };
+
+  const themeIcon = theme === 'dark' ? 'dark_mode' : theme === 'light' ? 'light_mode' : 'brightness_auto';
 
   const handleLogout = async () => {
     setShowUserMenu(false);
@@ -64,6 +74,19 @@ export default function Navbar({ user, onShowLogin }) {
               </NavLink>
             ))}
           </nav>
+
+          <button
+            onClick={cycleTheme}
+            title={`Theme: ${theme}`}
+            className="flex items-center justify-center ml-1"
+            style={{
+              width: 34, height: 34, borderRadius: 10,
+              background: 'var(--color-accent-dim)', border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <MdIcon name={themeIcon} style={{ fontSize: 18, color: 'var(--color-accent)' }} />
+          </button>
 
           <div className="relative ml-2">
             {user ? (

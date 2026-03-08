@@ -17,7 +17,7 @@ export default function History() {
         className="sky-gradient"
         style={{ padding: '36px 24px 28px', position: 'relative' }}
       >
-        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-2xl mx-auto">
+        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-3xl mx-auto">
           <h1 style={{
             fontSize: 26, fontWeight: 700, color: '#fff',
             letterSpacing: '-0.3px', lineHeight: 1.1, marginBottom: 4,
@@ -30,7 +30,7 @@ export default function History() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pb-24 md:pb-8" style={{ marginTop: -10 }}>
+      <div className="max-w-3xl mx-auto px-4 md:px-8 pb-24 md:pb-8" style={{ marginTop: -10 }}>
         {flightHistory.length === 0 ? (
           <div
             className="text-center py-16 fade-in"

@@ -1,5 +1,6 @@
 import {
   signInWithPopup,
+  signInWithRedirect,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
@@ -7,8 +8,20 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider, firebaseConfigured } from './firebase.js';
 
-export function signInWithGoogle() {
-  return signInWithPopup(auth, googleProvider);
+export async function signInWithGoogle() {
+  try {
+    return await signInWithPopup(auth, googleProvider);
+  } catch (err) {
+    // Fall back to redirect if popup fails (blocked, mobile, etc.)
+    if (
+      err.code === 'auth/popup-blocked' ||
+      err.code === 'auth/network-request-failed' ||
+      err.code === 'auth/internal-error'
+    ) {
+      return signInWithRedirect(auth, googleProvider);
+    }
+    throw err;
+  }
 }
 
 export function signInWithEmail(email, password) {
