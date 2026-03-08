@@ -104,68 +104,20 @@ function AircraftCard({ aircraft, tripCount, activeTrip, onClick }) {
   );
 }
 
-function AddAircraftCard({ onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-full flex flex-col items-center justify-center gap-3 transition-all"
-      style={{
-        background: 'var(--color-card)',
-        border: '2px dashed var(--color-separator)',
-        borderRadius: 14,
-        padding: '28px 20px',
-        cursor: 'pointer',
-        fontFamily: 'inherit',
-        minHeight: 120,
-      }}
-    >
-      <div
-        className="flex items-center justify-center"
-        style={{
-          width: 44, height: 44, borderRadius: 12,
-          background: 'var(--color-accent-dim)',
-        }}
-      >
-        <MdIcon name="add" style={{ fontSize: 26, color: 'var(--color-accent)' }} />
-      </div>
-      <div className="text-center">
-        <div className="text-[14px] font-semibold" style={{ color: 'var(--color-accent)' }}>Add Aircraft</div>
-        <div className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>Track a tail number</div>
-      </div>
-    </button>
-  );
-}
-
 function AddAircraftModal({ onClose }) {
   const addAircraft = useStore(s => s.addAircraft);
   const addToast = useStore(s => s.addToast);
   const [tail, setTail] = useState('');
-  const [icao, setIcao] = useState('');
-  const [icaoAuto, setIcaoAuto] = useState(false);
   const [nickname, setNickname] = useState('');
   const [type, setType] = useState('');
-
-  const handleTailChange = (val) => {
-    setTail(val);
-    if (isValidNNumber(val)) {
-      const hex = nNumberToIcao24(val);
-      if (hex) { setIcao(hex); setIcaoAuto(true); }
-    } else if (icaoAuto) {
-      setIcao(''); setIcaoAuto(false);
-    }
-  };
-
-  const handleIcaoChange = (val) => {
-    setIcao(val);
-    setIcaoAuto(false);
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!tail.trim()) return;
+    const icao = isValidNNumber(tail.trim()) ? (nNumberToIcao24(tail.trim()) || '') : '';
     addAircraft({
       tailNumber: tail.trim(),
-      icao24: icao.trim(),
+      icao24: icao,
       nickname: nickname.trim() || tail.trim(),
       aircraftType: type.trim(),
     });
@@ -197,17 +149,9 @@ function AddAircraftModal({ onClose }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <ModalField label="Tail Number *" value={tail} onChange={handleTailChange} placeholder="N12345" />
-          <ModalField label="ICAO24 Hex Code" value={icao} onChange={handleIcaoChange} placeholder="a1b2c3" />
+          <ModalField label="Tail Number *" value={tail} onChange={setTail} placeholder="N12345" />
           <ModalField label="Nickname" value={nickname} onChange={setNickname} placeholder="Dad's Cessna" />
           <ModalField label="Aircraft Type" value={type} onChange={setType} placeholder="Cessna 172" />
-
-          <p className="text-[12px] pt-1" style={{ color: 'var(--color-text-tertiary)' }}>
-            Find ICAO24 codes at{' '}
-            <a href="https://opensky-network.org/aircraft-database" target="_blank" rel="noopener" style={{ color: 'var(--color-accent)' }}>
-              OpenSky Aircraft Database
-            </a>
-          </p>
 
           <button
             type="submit"
@@ -279,7 +223,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 pb-24 md:pb-8" style={{ marginTop: -14 }}>
+      <div className="max-w-5xl mx-auto px-4 md:px-8 pb-24 md:pb-8" style={{ marginTop: -14 }}>
         <div className="glass fade-in flex items-center justify-between mb-4" style={{ padding: '14px 18px' }}>
           <div>
             <h2 className="text-[16px] font-bold" style={{ color: 'var(--color-text-primary)' }}>My Aircraft</h2>
@@ -308,7 +252,6 @@ export default function Home() {
               onClick={() => navigate(`/aircraft/${encodeURIComponent(ac.tailNumber)}`)}
             />
           ))}
-          <AddAircraftCard onClick={() => setShowAddModal(true)} />
         </div>
 
         {aircraft.length === 0 && (

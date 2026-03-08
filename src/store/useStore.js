@@ -74,6 +74,7 @@ const useStore = create((set, get) => ({
     mapStyle: 'dark',
     units: 'aviation',
     pollInterval: 10000,
+    theme: 'system',
   }),
 
   // Auth: set user and load cloud data

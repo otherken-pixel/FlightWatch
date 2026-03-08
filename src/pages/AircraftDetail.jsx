@@ -187,7 +187,7 @@ export default function AircraftDetail() {
           backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
-        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-2xl mx-auto">
+        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-3xl mx-auto">
           <button
             onClick={() => navigate('/')}
             className="flex items-center gap-1 mb-4 text-sm font-medium"
@@ -276,7 +276,7 @@ export default function AircraftDetail() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pb-20 md:pb-8" style={{ marginTop: -8 }}>
+      <div className="max-w-3xl mx-auto px-4 md:px-8 pb-20 md:pb-8" style={{ marginTop: -8 }}>
         {/* Live trip banner */}
         {activeTrip && (
           <LiveTripBanner
