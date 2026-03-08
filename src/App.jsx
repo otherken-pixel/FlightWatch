@@ -44,7 +44,16 @@ export default function App() {
       setShowLogin(false);
       migrateLocalData(user.uid)
         .then(() => loadCloudData(user.uid))
-        .catch(console.warn);
+        .catch((err) => {
+          console.error('[FlightWatch] Sync failed:', err);
+          useStore.getState().addToast({
+            type: 'error',
+            title: 'Cloud Sync Error',
+            message: err?.code === 'permission-denied'
+              ? 'Firestore access denied. Security rules may not be deployed.'
+              : 'Could not sync with cloud. Using local data.',
+          });
+        });
     }
   }, [user]);
 
