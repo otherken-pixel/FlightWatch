@@ -206,10 +206,9 @@ export default function AircraftDetail() {
                   background: 'rgba(255,255,255,0.12)',
                   backdropFilter: 'blur(8px)',
                   border: '1px solid rgba(255,255,255,0.2)',
-                  fontSize: 28,
                 }}
               >
-                {ac.emoji}
+                <MdIcon name="flight" style={{ fontSize: 28, color: '#fff' }} />
               </div>
               <div>
                 <div style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px' }}>
