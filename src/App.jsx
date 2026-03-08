@@ -32,7 +32,6 @@ export default function App() {
     setCurrentUser(user);
     if (user) {
       setShowLogin(false);
-      // Migrate local data if first login, then load cloud data
       migrateLocalData(user.uid)
         .then(() => loadCloudData(user.uid))
         .catch(console.warn);
@@ -42,19 +41,17 @@ export default function App() {
   // Show loading splash while auth initializes
   if (authLoading) {
     return (
-      <div
-        className="h-full flex flex-col items-center justify-center gap-5 sky-gradient"
-      >
+      <div className="h-full flex flex-col items-center justify-center gap-5 sky-gradient">
         <div
           className="flex items-center justify-center"
           style={{
-            width: 64, height: 64, borderRadius: 18,
+            width: 60, height: 60, borderRadius: 16,
             background: 'rgba(255,255,255,0.12)',
             backdropFilter: 'blur(8px)',
             border: '1px solid rgba(255,255,255,0.2)',
           }}
         >
-          <MdIcon name="flight" style={{ fontSize: 34, color: '#fff' }} />
+          <MdIcon name="flight" style={{ fontSize: 30, color: '#fff' }} />
         </div>
         <div>
           <div style={{ color: '#fff', fontSize: 20, fontWeight: 700, textAlign: 'center', letterSpacing: '-0.3px' }}>FlightWatch</div>
@@ -65,7 +62,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-full flex flex-col" style={{ background: 'var(--color-bg-elevated)' }}>
+    <div className="h-full flex flex-col" style={{ background: 'var(--color-bg)' }}>
       <Navbar user={user} onShowLogin={() => setShowLogin(true)} />
       <Routes>
         <Route path="/" element={<Home />} />

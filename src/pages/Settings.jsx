@@ -7,76 +7,76 @@ function MdIcon({ name, style }) {
   return <span className="material-symbols-rounded" style={style}>{name}</span>;
 }
 
-function Section({ title, icon, children }) {
+function SectionHeader({ children }) {
+  return <div className="section-header mt-5 mb-1.5">{children}</div>;
+}
+
+function GroupedSection({ children }) {
+  return <div className="grouped-section">{children}</div>;
+}
+
+function Row({ children, style }) {
+  return <div className="grouped-row" style={style}>{children}</div>;
+}
+
+function Toggle({ label, icon, checked, onChange }) {
   return (
-    <div
-      className="mb-4 fade-in"
-      style={{
-        background: 'var(--color-card)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        borderRadius: 16,
-        padding: '18px 20px',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-      }}
-    >
-      <div className="flex items-center gap-2.5 mb-4">
-        {icon && (
-          <div className="flex items-center justify-center" style={{
-            width: 28, height: 28, borderRadius: 8,
-            background: 'linear-gradient(135deg, rgba(0,119,182,0.2), rgba(72,202,228,0.2))',
-          }}>
-            <MdIcon name={icon} style={{ fontSize: 16, color: '#48CAE4' }} />
-          </div>
-        )}
-        <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)', margin: 0 }}>{title}</h3>
-      </div>
-      {children}
-    </div>
+    <Row>
+      {icon && <MdIcon name={icon} style={{ fontSize: 20, color: 'var(--color-text-secondary)' }} />}
+      <span className="flex-1 text-[15px]" style={{ color: 'var(--color-text-primary)' }}>{label}</span>
+      <button
+        type="button"
+        className="ios-toggle"
+        data-checked={String(checked)}
+        onClick={() => onChange(!checked)}
+      >
+        <span className="ios-toggle-knob" />
+      </button>
+    </Row>
   );
 }
 
-function Input({ label, value, onChange, placeholder, type = 'text' }) {
+function InputRow({ label, value, onChange, placeholder, type = 'text' }) {
   return (
-    <label className="block mb-3">
-      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)', letterSpacing: '0.8px' }}>{label}</span>
+    <Row style={{ flexDirection: 'column', alignItems: 'stretch', gap: 4 }}>
+      <span className="text-[12px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>{label}</span>
       <input
         type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="mt-1 w-full px-3 py-2.5 text-sm outline-none"
-        style={{
-          background: 'var(--color-card-mid)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: 12,
-          color: 'var(--color-text-primary)',
-          fontFamily: 'inherit',
-        }}
+        className="modern-input"
+        style={{ fontSize: 15 }}
       />
-    </label>
+    </Row>
   );
 }
 
-function Toggle({ label, checked, onChange }) {
+function SegmentedControl({ options, value, onChange }) {
   return (
-    <label className="flex items-center justify-between py-2.5 cursor-pointer" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-      <span className="text-sm" style={{ color: 'var(--color-text-primary)' }}>{label}</span>
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        className="relative transition-colors"
-        style={{
-          width: 44, height: 24, borderRadius: 99,
-          background: checked ? '#34C759' : 'var(--color-card-high)',
-          boxShadow: checked ? '0 0 10px rgba(52,199,89,0.3)' : 'none',
-        }}
-      >
-        <span
-          className="absolute top-0.5 left-0.5 rounded-full bg-white transition-transform"
-          style={{ width: 20, height: 20, transform: checked ? 'translateX(20px)' : 'translateX(0)' }}
-        />
-      </button>
-    </label>
+    <div style={{
+      display: 'flex', gap: 2, padding: 3,
+      background: 'var(--color-card-mid)',
+      borderRadius: 10,
+    }}>
+      {options.map(opt => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className="text-[13px] font-semibold"
+          style={{
+            flex: 1, padding: '8px 12px', borderRadius: 8,
+            background: value === opt.value ? 'var(--color-card)' : 'transparent',
+            color: value === opt.value ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+            boxShadow: value === opt.value ? 'var(--shadow-sm)' : 'none',
+            border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -84,7 +84,6 @@ export default function Settings() {
   const aircraft = useStore(s => s.aircraft);
   const addAircraft = useStore(s => s.addAircraft);
   const removeAircraft = useStore(s => s.removeAircraft);
-  const updateAircraft = useStore(s => s.updateAircraft);
   const notifications = useStore(s => s.notifications);
   const updateNotifications = useStore(s => s.updateNotifications);
   const apiKeys = useStore(s => s.apiKeys);
@@ -122,10 +121,7 @@ export default function Settings() {
       nickname: newNickname.trim() || newTail.trim(),
       aircraftType: newType.trim(),
     });
-    setNewTail('');
-    setNewIcao('');
-    setNewNickname('');
-    setNewType('');
+    setNewTail(''); setNewIcao(''); setNewNickname(''); setNewType('');
     addToast({ type: 'info', title: 'Aircraft Added', message: `Now tracking ${newTail.trim().toUpperCase()}` });
   };
 
@@ -138,200 +134,140 @@ export default function Settings() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {/* Page header with sky gradient */}
-      <div
-        className="sky-gradient"
-        style={{
-          padding: '40px 24px 32px',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.03,
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
+      {/* Page header */}
+      <div className="sky-gradient" style={{ padding: '36px 24px 28px', position: 'relative' }}>
         <div style={{ position: 'relative', zIndex: 1 }} className="max-w-2xl mx-auto">
-          <div
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              background: 'rgba(255,255,255,0.12)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(8px)',
-              color: '#fff',
-              fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
-              padding: '4px 10px', borderRadius: 999,
-              marginBottom: 12,
-            }}
-          >
-            <MdIcon name="tune" style={{ fontSize: 13, color: '#90E0EF' }} />
-            Configuration
-          </div>
-          <h1 style={{
-            fontSize: 28, fontWeight: 700, color: '#fff',
-            letterSpacing: '-0.5px', lineHeight: 1.1,
-          }}>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px', lineHeight: 1.1 }}>
             Settings
           </h1>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 pb-20 md:pb-8" style={{ marginTop: -12 }}>
-        {/* Add Aircraft */}
-        <Section title="Add Aircraft" icon="add_circle">
-          <Input label="Tail Number *" value={newTail} onChange={handleTailChange} placeholder="N12345" />
-          <Input label="ICAO24 Hex Code" value={newIcao} onChange={handleIcaoChange} placeholder="a1b2c3 (required for tracking)" />
-          <Input label="Nickname" value={newNickname} onChange={setNewNickname} placeholder="Dad's Cessna" />
-          <Input label="Aircraft Type" value={newType} onChange={setNewType} placeholder="Cessna 172" />
-          <p className="text-xs mb-3" style={{ color: 'var(--color-text-tertiary)' }}>
-            Find ICAO24 hex codes at{' '}
-            <a href="https://opensky-network.org/aircraft-database" target="_blank" rel="noopener"
-              style={{ color: 'var(--color-accent)' }}
+      <div className="max-w-2xl mx-auto px-4 pb-24 md:pb-8" style={{ marginTop: -10 }}>
+        {/* ── Add Aircraft ── */}
+        <SectionHeader>Add Aircraft</SectionHeader>
+        <GroupedSection>
+          <InputRow label="Tail Number *" value={newTail} onChange={handleTailChange} placeholder="N12345" />
+          <InputRow label="ICAO24 Hex Code" value={newIcao} onChange={handleIcaoChange} placeholder="a1b2c3 (required for tracking)" />
+          <InputRow label="Nickname" value={newNickname} onChange={setNewNickname} placeholder="Dad's Cessna" />
+          <InputRow label="Aircraft Type" value={newType} onChange={setNewType} placeholder="Cessna 172" />
+          <Row style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
+            <p className="text-[12px]" style={{ color: 'var(--color-text-tertiary)' }}>
+              Find ICAO24 codes at{' '}
+              <a href="https://opensky-network.org/aircraft-database" target="_blank" rel="noopener" style={{ color: 'var(--color-accent)' }}>
+                OpenSky Database
+              </a>
+            </p>
+            <button
+              onClick={handleAddAircraft}
+              disabled={!newTail.trim()}
+              className="w-full py-2.5 text-[15px] font-semibold transition-all disabled:opacity-40"
+              style={{
+                background: 'var(--color-accent)', color: '#fff', borderRadius: 10,
+                border: 'none', cursor: newTail.trim() ? 'pointer' : 'not-allowed',
+                boxShadow: 'var(--shadow-button)', fontFamily: 'inherit',
+              }}
             >
-              OpenSky Aircraft Database
-            </a>
-          </p>
-          <button
-            onClick={handleAddAircraft}
-            disabled={!newTail.trim()}
-            className="w-full py-2.5 text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{
-              background: 'var(--color-accent)',
-              color: '#fff',
-              borderRadius: 999,
-              border: 'none',
-              boxShadow: '0 4px 18px rgba(0,122,255,0.4)',
-            }}
-          >
-            Add Aircraft
-          </button>
-        </Section>
+              Add Aircraft
+            </button>
+          </Row>
+        </GroupedSection>
 
-        {/* Tracked Aircraft */}
-        <Section title={`Tracked Aircraft (${aircraft.length})`} icon="flight">
+        {/* ── Tracked Aircraft ── */}
+        <SectionHeader>Tracked Aircraft ({aircraft.length})</SectionHeader>
+        <GroupedSection>
           {aircraft.length === 0 ? (
-            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>No aircraft tracked yet.</p>
+            <Row>
+              <span className="text-[15px]" style={{ color: 'var(--color-text-secondary)' }}>No aircraft tracked yet.</span>
+            </Row>
           ) : (
-            <div className="space-y-2">
-              {aircraft.map(ac => (
-                <div
-                  key={ac.id}
-                  className="flex items-center gap-3 p-3"
-                  style={{
-                    background: 'var(--color-card-mid)',
-                    borderRadius: 12,
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <span className="text-xl">{ac.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm truncate" style={{ color: 'var(--color-text-primary)' }}>{ac.nickname}</div>
-                    <div className="text-xs font-mono" style={{ color: 'var(--color-text-tertiary)' }}>{ac.tailNumber} · {ac.icao24 || 'No ICAO24'}</div>
-                  </div>
-                  <button
-                    onClick={() => removeAircraft(ac.id)}
-                    className="transition-colors px-2"
-                    style={{ color: 'var(--color-text-tertiary)', border: 'none', background: 'none' }}
-                    title="Remove aircraft"
-                  >
-                    <MdIcon name="delete" style={{ fontSize: 18 }} />
-                  </button>
+            aircraft.map(ac => (
+              <Row key={ac.id}>
+                <span className="text-[20px]">{ac.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-[15px] truncate" style={{ color: 'var(--color-text-primary)' }}>{ac.nickname}</div>
+                  <div className="text-[12px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>{ac.tailNumber} · {ac.icao24 || 'No ICAO24'}</div>
                 </div>
-              ))}
-            </div>
+                <button
+                  onClick={() => removeAircraft(ac.id)}
+                  style={{ color: 'var(--color-nogo)', border: 'none', background: 'none', cursor: 'pointer', padding: 4 }}
+                >
+                  <MdIcon name="delete" style={{ fontSize: 20 }} />
+                </button>
+              </Row>
+            ))
           )}
-        </Section>
+        </GroupedSection>
 
-        {/* Notifications */}
-        <Section title="Notifications" icon="notifications">
-          <button
-            onClick={handleEnableNotifications}
-            className="w-full py-2.5 mb-3 text-sm font-medium transition-colors"
-            style={{
-              background: 'var(--color-card-mid)',
-              color: 'var(--color-text-primary)',
-              borderRadius: 12,
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}
-          >
-            Enable Browser Notifications
-          </button>
-          <Toggle label="Takeoff alerts" checked={notifications.takeoff} onChange={v => updateNotifications({ takeoff: v })} />
-          <Toggle label="Landing alerts" checked={notifications.landing} onChange={v => updateNotifications({ landing: v })} />
-          <Toggle label="Lost signal alerts" checked={notifications.lostSignal} onChange={v => updateNotifications({ lostSignal: v })} />
-          <Toggle label="Sound effects" checked={notifications.sound} onChange={v => updateNotifications({ sound: v })} />
-        </Section>
+        {/* ── Notifications ── */}
+        <SectionHeader>Notifications</SectionHeader>
+        <GroupedSection>
+          <Row>
+            <button
+              onClick={handleEnableNotifications}
+              className="w-full py-2.5 text-[14px] font-medium"
+              style={{
+                background: 'var(--color-accent-dim)', color: 'var(--color-accent)',
+                borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Enable Browser Notifications
+            </button>
+          </Row>
+          <Toggle label="Takeoff alerts" icon="flight_takeoff" checked={notifications.takeoff} onChange={v => updateNotifications({ takeoff: v })} />
+          <Toggle label="Landing alerts" icon="flight_land" checked={notifications.landing} onChange={v => updateNotifications({ landing: v })} />
+          <Toggle label="Lost signal alerts" icon="wifi_off" checked={notifications.lostSignal} onChange={v => updateNotifications({ lostSignal: v })} />
+          <Toggle label="Sound effects" icon="volume_up" checked={notifications.sound} onChange={v => updateNotifications({ sound: v })} />
+        </GroupedSection>
 
-        {/* API Keys */}
-        <Section title="API Keys" icon="key">
-          <p className="text-xs mb-3" style={{ color: 'var(--color-text-tertiary)' }}>
-            API keys are stored locally in your browser and never sent to any server except the respective API providers.
-          </p>
-          <Input
+        {/* ── API Keys ── */}
+        <SectionHeader>API Keys</SectionHeader>
+        <GroupedSection>
+          <InputRow
             label="OpenWeatherMap API Key"
             value={apiKeys.openweather}
             onChange={v => updateApiKeys({ openweather: v })}
             placeholder="Get free key at openweathermap.org"
           />
-          <Input
+          <InputRow
             label="ADS-B Exchange API Key (optional)"
             value={apiKeys.adsbExchange}
             onChange={v => updateApiKeys({ adsbExchange: v })}
             placeholder="For enhanced tracking"
           />
-        </Section>
+        </GroupedSection>
+        <p className="text-[12px] mt-1.5 px-4" style={{ color: 'var(--color-text-tertiary)' }}>
+          Keys are stored locally and never sent to third-party servers.
+        </p>
 
-        {/* Display Settings */}
-        <Section title="Display" icon="palette">
-          <div className="mb-4">
-            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)', letterSpacing: '0.8px' }}>Map Style</span>
-            <div className="flex gap-2 mt-2">
-              {['dark', 'light'].map(style => (
-                <button
-                  key={style}
-                  onClick={() => updateSettings({ mapStyle: style })}
-                  className="flex-1 py-2.5 text-sm font-semibold capitalize transition-all"
-                  style={{
-                    borderRadius: 12,
-                    background: settings.mapStyle === style ? 'var(--color-accent)' : 'var(--color-card-mid)',
-                    color: settings.mapStyle === style ? '#fff' : 'var(--color-text-secondary)',
-                    border: settings.mapStyle === style ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                    boxShadow: settings.mapStyle === style ? '0 4px 12px rgba(0,122,255,0.3)' : 'none',
-                  }}
-                >
-                  {style}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)', letterSpacing: '0.8px' }}>Poll Interval</span>
-            <div className="flex gap-2 mt-2">
-              {[
+        {/* ── Display ── */}
+        <SectionHeader>Display</SectionHeader>
+        <GroupedSection>
+          <Row style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
+            <span className="text-[12px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>Map Style</span>
+            <SegmentedControl
+              options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]}
+              value={settings.mapStyle}
+              onChange={v => updateSettings({ mapStyle: v })}
+            />
+          </Row>
+          <Row style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
+            <span className="text-[12px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>Poll Interval</span>
+            <SegmentedControl
+              options={[
                 { value: 5000, label: '5s' },
                 { value: 10000, label: '10s' },
                 { value: 30000, label: '30s' },
                 { value: 60000, label: '60s' },
-              ].map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => updateSettings({ pollInterval: opt.value })}
-                  className="flex-1 py-2.5 text-sm font-semibold transition-all"
-                  style={{
-                    borderRadius: 12,
-                    background: settings.pollInterval === opt.value ? 'var(--color-accent)' : 'var(--color-card-mid)',
-                    color: settings.pollInterval === opt.value ? '#fff' : 'var(--color-text-secondary)',
-                    border: settings.pollInterval === opt.value ? 'none' : '1px solid rgba(255,255,255,0.08)',
-                    boxShadow: settings.pollInterval === opt.value ? '0 4px 12px rgba(0,122,255,0.3)' : 'none',
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </Section>
+              ]}
+              value={settings.pollInterval}
+              onChange={v => updateSettings({ pollInterval: v })}
+            />
+          </Row>
+        </GroupedSection>
+        <p className="text-[12px] mt-1.5 px-4" style={{ color: 'var(--color-text-tertiary)' }}>
+          Shorter intervals use more data but update positions faster.
+        </p>
       </div>
     </div>
   );

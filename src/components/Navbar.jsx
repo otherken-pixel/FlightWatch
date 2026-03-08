@@ -25,40 +25,38 @@ export default function Navbar({ user, onShowLogin }) {
 
   return (
     <>
-      {/* Desktop frosted glass header — iOS translucent nav */}
+      {/* ── Desktop header ── */}
       <header
         className="hidden md:flex items-center justify-between px-6 z-50 shrink-0 glass-nav"
-        style={{ height: 56 }}
+        style={{ height: 52 }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <div
             className="flex items-center justify-center sky-gradient"
-            style={{
-              width: 32, height: 32, borderRadius: 8,
-            }}
+            style={{ width: 30, height: 30, borderRadius: 8 }}
           >
-            <MdIcon name="flight" style={{ fontSize: 18, color: '#fff' }} />
+            <MdIcon name="flight" style={{ fontSize: 16, color: '#fff' }} />
           </div>
           <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: '-0.3px', color: 'var(--color-text-primary)' }}>
             FlightWatch
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <nav className="flex items-center gap-1">
             {links.map(link => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all duration-150 ${
-                    isActive ? 'text-accent' : 'text-text-secondary hover:text-text-primary'
+                  `flex items-center gap-2 px-4 py-2 text-[14px] font-medium transition-all ${
+                    isActive ? '' : ''
                   }`
                 }
                 style={({ isActive }) => ({
-                  borderRadius: 12,
-                  background: isActive ? 'var(--color-accent-dim)' : 'none',
-                  border: isActive ? '1px solid rgba(0,122,255,0.3)' : '1px solid transparent',
+                  borderRadius: 10,
+                  background: isActive ? 'var(--color-accent-dim)' : 'transparent',
+                  color: isActive ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                 })}
               >
                 <MdIcon name={link.icon} style={{ fontSize: 18 }} />
@@ -67,105 +65,84 @@ export default function Navbar({ user, onShowLogin }) {
             ))}
           </nav>
 
-          {/* Auth button */}
           <div className="relative ml-2">
             {user ? (
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="flex items-center justify-center"
                 style={{
-                  width: 34, height: 34, borderRadius: 99,
+                  width: 32, height: 32, borderRadius: 99,
                   background: photoURL ? 'none' : 'var(--color-accent-dim)',
-                  border: '1px solid rgba(0,122,255,0.3)',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
+                  border: '1px solid var(--color-separator)',
+                  cursor: 'pointer', overflow: 'hidden',
                 }}
               >
                 {photoURL ? (
                   <img src={photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
                 ) : avatarLetter ? (
-                  <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-accent)', textTransform: 'uppercase' }}>
-                    {avatarLetter}
-                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-accent)', textTransform: 'uppercase' }}>{avatarLetter}</span>
                 ) : (
-                  <MdIcon name="person" style={{ fontSize: 18, color: 'var(--color-accent)' }} />
+                  <MdIcon name="person" style={{ fontSize: 16, color: 'var(--color-accent)' }} />
                 )}
               </button>
             ) : (
               <button
                 onClick={onShowLogin}
-                className="flex items-center gap-1.5 text-sm font-semibold"
+                className="flex items-center gap-1.5 text-[14px] font-semibold"
                 style={{
-                  borderRadius: 999,
-                  background: 'var(--color-accent)',
-                  border: 'none',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  padding: '8px 20px',
+                  borderRadius: 10, background: 'var(--color-accent)',
+                  border: 'none', color: '#fff', cursor: 'pointer', padding: '7px 18px',
+                  fontFamily: 'inherit',
                 }}
               >
                 Sign In
               </button>
             )}
 
-            {/* User dropdown menu */}
             {showUserMenu && user && (
               <>
-                <div
-                  style={{ position: 'fixed', inset: 0, zIndex: 150 }}
-                  onClick={() => setShowUserMenu(false)}
-                />
+                <div style={{ position: 'fixed', inset: 0, zIndex: 150 }} onClick={() => setShowUserMenu(false)} />
                 <div
                   className="fade-in"
                   style={{
                     position: 'absolute', top: 'calc(100% + 8px)', right: 0,
                     background: 'var(--color-card)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 16, padding: 8, minWidth: 220,
-                    boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
-                    zIndex: 200,
+                    border: '1px solid var(--color-separator)',
+                    borderRadius: 14, padding: 6, minWidth: 200,
+                    boxShadow: 'var(--shadow-lg)', zIndex: 200,
                   }}
                 >
-                  {/* User info */}
-                  <div style={{ padding: '10px 12px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div className="flex items-center gap-2.5 mb-1.5">
+                  <div style={{ padding: '10px 12px 10px', borderBottom: '1px solid var(--color-separator)' }}>
+                    <div className="flex items-center gap-2.5 mb-1">
                       <div
                         className="flex items-center justify-center shrink-0"
                         style={{
-                          width: 36, height: 36, borderRadius: 99,
+                          width: 34, height: 34, borderRadius: 99,
                           background: photoURL ? 'none' : 'var(--color-accent-dim)',
-                          border: '1px solid rgba(0,122,255,0.2)',
-                          overflow: 'hidden',
+                          border: '1px solid var(--color-separator)', overflow: 'hidden',
                         }}
                       >
                         {photoURL ? (
                           <img src={photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
                         ) : (
-                          <MdIcon name="person" style={{ fontSize: 18, color: 'var(--color-accent)' }} />
+                          <MdIcon name="person" style={{ fontSize: 16, color: 'var(--color-accent)' }} />
                         )}
                       </div>
                       <div className="min-w-0">
                         {user.displayName && (
-                          <div className="text-sm font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>
-                            {user.displayName}
-                          </div>
+                          <div className="text-[14px] font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>{user.displayName}</div>
                         )}
-                        <div className="text-xs truncate" style={{ color: 'var(--color-text-tertiary)' }}>
-                          {user.email}
-                        </div>
+                        <div className="text-[12px] truncate" style={{ color: 'var(--color-text-tertiary)' }}>{user.email}</div>
                       </div>
                     </div>
                   </div>
-
-                  {/* Sign out */}
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2.5 w-full text-left"
+                    className="flex items-center gap-2 w-full text-left"
                     style={{
-                      padding: '10px 12px', borderRadius: 12,
+                      padding: '10px 12px', borderRadius: 10,
                       background: 'none', border: 'none', cursor: 'pointer',
-                      color: 'var(--color-nogo)', fontSize: 14, fontWeight: 500,
-                      fontFamily: 'inherit',
+                      color: 'var(--color-nogo)', fontSize: 14, fontWeight: 500, fontFamily: 'inherit',
                     }}
                   >
                     <MdIcon name="logout" style={{ fontSize: 18 }} />
@@ -178,136 +155,101 @@ export default function Navbar({ user, onShowLogin }) {
         </div>
       </header>
 
-      {/* Mobile bottom nav — sky gradient glass */}
+      {/* ── Mobile bottom nav ── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center glass-nav"
         style={{
-          height: 64,
-          background: 'linear-gradient(180deg, rgba(0,18,51,0.88) 0%, rgba(2,62,138,0.92) 50%, rgba(0,119,182,0.85) 100%)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          borderTop: '1px solid rgba(72,202,228,0.15)',
+          height: 56,
+          borderTop: '1px solid var(--color-separator)',
+          borderBottom: 'none',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          boxShadow: '0 -4px 20px rgba(0,18,51,0.5)',
         }}
       >
         {links.map(link => (
           <NavLink
             key={link.to}
             to={link.to}
-            className={({ isActive }) =>
-              `flex flex-col items-center gap-1 py-2 text-[10px] font-semibold transition-colors ${
-                isActive ? 'text-accent' : 'text-text-tertiary'
-              }`
-            }
-            style={{ letterSpacing: '0.3px' }}
+            className="flex flex-col items-center gap-0.5 py-1.5"
+            style={{ minWidth: 64 }}
           >
             {({ isActive }) => (
               <>
-                <div
-                  className="flex items-center justify-center"
+                <MdIcon
+                  name={link.icon}
                   style={{
-                    width: 40, height: 32, borderRadius: 12,
-                    background: isActive ? 'rgba(72,202,228,0.2)' : 'transparent',
-                    border: isActive ? '1px solid rgba(72,202,228,0.25)' : '1px solid transparent',
-                    transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    fontSize: 24,
+                    color: isActive ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+                    fontVariationSettings: isActive ? "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24" : undefined,
                   }}
-                >
-                  <MdIcon name={link.icon} style={{ fontSize: 22, color: isActive ? '#48CAE4' : 'rgba(255,255,255,0.45)' }} />
-                </div>
-                <span style={{ color: isActive ? '#48CAE4' : 'rgba(255,255,255,0.45)' }}>{link.label}</span>
+                />
+                <span className="text-[10px] font-semibold" style={{
+                  color: isActive ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
+                }}>
+                  {link.label}
+                </span>
               </>
             )}
           </NavLink>
         ))}
-        {/* Mobile account button */}
         <button
           onClick={user ? () => setShowUserMenu(!showUserMenu) : onShowLogin}
-          className="flex flex-col items-center gap-1 py-2 text-[10px] font-semibold"
-          style={{
-            letterSpacing: '0.3px',
-            color: user ? '#48CAE4' : 'rgba(255,255,255,0.45)',
-            background: 'none', border: 'none', cursor: 'pointer',
-            fontFamily: 'inherit',
-          }}
+          className="flex flex-col items-center gap-0.5 py-1.5"
+          style={{ minWidth: 64, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          <div
-            className="flex items-center justify-center"
-            style={{
-              width: 40, height: 32, borderRadius: 12,
-              background: user ? 'rgba(72,202,228,0.2)' : 'transparent',
-              border: user ? '1px solid rgba(72,202,228,0.25)' : '1px solid transparent',
-              transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              overflow: 'hidden',
-            }}
-          >
-            {user?.photoURL ? (
-              <img src={user.photoURL} alt="" style={{ width: 22, height: 22, borderRadius: 99, objectFit: 'cover' }} referrerPolicy="no-referrer" />
-            ) : (
-              <MdIcon name="person" style={{ fontSize: 22, color: 'rgba(255,255,255,0.45)' }} />
-            )}
-          </div>
-          {user ? 'Account' : 'Sign In'}
+          {user?.photoURL ? (
+            <img src={user.photoURL} alt="" style={{ width: 24, height: 24, borderRadius: 99, objectFit: 'cover' }} referrerPolicy="no-referrer" />
+          ) : (
+            <MdIcon name="person" style={{ fontSize: 24, color: 'var(--color-text-tertiary)' }} />
+          )}
+          <span className="text-[10px] font-semibold" style={{ color: 'var(--color-text-tertiary)' }}>
+            {user ? 'Account' : 'Sign In'}
+          </span>
         </button>
       </nav>
 
-      {/* Mobile user menu (shown as bottom sheet) */}
+      {/* Mobile user sheet */}
       {showUserMenu && user && (
         <div className="md:hidden fixed inset-0 z-[700]">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowUserMenu(false)} />
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)' }} onClick={() => setShowUserMenu(false)} />
           <div
-            className="absolute bottom-16 left-0 right-0 fade-in"
+            className="absolute bottom-16 left-3 right-3 fade-in"
             style={{
-              background: 'linear-gradient(180deg, rgba(0,18,51,0.95) 0%, rgba(2,62,138,0.97) 100%)',
-              backdropFilter: 'blur(24px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-              borderTop: '1px solid rgba(72,202,228,0.15)',
-              borderRadius: '22px 22px 0 0',
-              padding: '24px 20px',
-              boxShadow: '0 -8px 40px rgba(0,18,51,0.6)',
+              background: 'var(--color-card)',
+              border: '1px solid var(--color-separator)',
+              borderRadius: 16,
+              padding: '20px',
+              boxShadow: 'var(--shadow-lg)',
+              marginBottom: 'env(safe-area-inset-bottom, 0px)',
             }}
           >
-            <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: 'rgba(255,255,255,0.15)' }} />
-
-            {/* User info */}
-            <div className="flex items-center gap-3 mb-5">
+            <div className="flex items-center gap-3 mb-4">
               <div
                 className="flex items-center justify-center shrink-0"
                 style={{
-                  width: 48, height: 48, borderRadius: 99,
+                  width: 44, height: 44, borderRadius: 99,
                   background: photoURL ? 'none' : 'var(--color-accent-dim)',
-                  border: '1px solid rgba(0,122,255,0.2)',
-                  overflow: 'hidden',
+                  border: '1px solid var(--color-separator)', overflow: 'hidden',
                 }}
               >
                 {photoURL ? (
                   <img src={photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
                 ) : (
-                  <MdIcon name="person" style={{ fontSize: 24, color: 'var(--color-accent)' }} />
+                  <MdIcon name="person" style={{ fontSize: 22, color: 'var(--color-accent)' }} />
                 )}
               </div>
               <div className="min-w-0">
                 {user.displayName && (
-                  <div className="text-base font-bold truncate" style={{ color: 'var(--color-text-primary)' }}>
-                    {user.displayName}
-                  </div>
+                  <div className="text-[16px] font-bold truncate" style={{ color: 'var(--color-text-primary)' }}>{user.displayName}</div>
                 )}
-                <div className="text-xs truncate" style={{ color: 'var(--color-text-tertiary)' }}>
-                  {user.email}
-                </div>
+                <div className="text-[13px] truncate" style={{ color: 'var(--color-text-tertiary)' }}>{user.email}</div>
               </div>
             </div>
-
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold"
+              className="w-full flex items-center justify-center gap-2 py-2.5 text-[15px] font-semibold"
               style={{
-                borderRadius: 16,
-                background: 'rgba(255,69,58,0.12)',
-                border: '1px solid rgba(255,69,58,0.2)',
-                color: '#FF453A',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
+                borderRadius: 10, background: 'var(--color-accent-dim)',
+                border: 'none', color: 'var(--color-nogo)', cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
               <MdIcon name="logout" style={{ fontSize: 18 }} />
