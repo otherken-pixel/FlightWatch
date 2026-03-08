@@ -20,12 +20,12 @@ function TripCard({ trip, onClick }) {
       className="w-full text-left transition-all"
       style={{
         background: 'var(--color-card)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        border: '1px solid var(--color-separator)',
         borderRadius: 16,
         padding: '16px 18px',
         cursor: 'pointer',
         fontFamily: 'inherit',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+        boxShadow: 'var(--shadow-sm)',
       }}
     >
       {/* Route header */}
@@ -34,9 +34,9 @@ function TripCard({ trip, onClick }) {
           {departureLabel}
         </span>
         <div className="flex-1 flex items-center gap-1">
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+          <div style={{ flex: 1, height: 1, background: 'var(--color-separator)' }} />
           <MdIcon name="flight" style={{ fontSize: 16, color: 'var(--color-accent)', transform: 'rotate(90deg)' }} />
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+          <div style={{ flex: 1, height: 1, background: 'var(--color-separator)' }} />
         </div>
         <span className="font-bold text-sm font-mono" style={{ color: 'var(--color-text-primary)' }}>
           {arrivalLabel}
@@ -171,13 +171,21 @@ export default function AircraftDetail() {
     navigate('/');
   };
 
+  const chipStyle = {
+    display: 'inline-flex', alignItems: 'center', gap: 4,
+    background: 'rgba(255,255,255,0.1)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 999, padding: '4px 10px',
+    fontSize: 12, color: 'rgba(255,255,255,0.7)',
+  };
+
   return (
     <div className="flex-1 overflow-y-auto">
       {/* Aircraft header with sky gradient */}
       <div
         className="sky-gradient"
         style={{
-          padding: '32px 24px 28px',
+          padding: '32px 24px 36px',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -187,20 +195,20 @@ export default function AircraftDetail() {
           backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
           backgroundSize: '24px 24px',
         }} />
-        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-3xl mx-auto">
+        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-5xl mx-auto px-0 md:px-4">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-1 mb-4 text-sm font-medium"
+            className="flex items-center gap-1 mb-5 text-sm font-medium"
             style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontFamily: 'inherit' }}
           >
             <MdIcon name="arrow_back" style={{ fontSize: 18 }} />
             My Aircraft
           </button>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
               <div
-                className="flex items-center justify-center"
+                className="flex items-center justify-center shrink-0"
                 style={{
                   width: 56, height: 56, borderRadius: 16,
                   background: 'rgba(255,255,255,0.12)',
@@ -211,10 +219,10 @@ export default function AircraftDetail() {
                 <MdIcon name="flight" style={{ fontSize: 28, color: '#fff' }} />
               </div>
               <div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px' }}>
+                <div style={{ fontSize: 26, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px' }}>
                   {ac.tailNumber}
                 </div>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>
+                <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
                   {ac.nickname !== ac.tailNumber && <span>{ac.nickname} · </span>}
                   {ac.aircraftType || 'Aircraft'}
                 </div>
@@ -222,11 +230,11 @@ export default function AircraftDetail() {
             </div>
             <button
               onClick={handleDelete}
-              className="flex items-center justify-center"
+              className="flex items-center justify-center shrink-0"
               style={{
-                width: 36, height: 36, borderRadius: 10,
+                width: 38, height: 38, borderRadius: 10,
                 background: 'rgba(255,69,58,0.15)', border: '1px solid rgba(255,69,58,0.3)',
-                cursor: 'pointer',
+                cursor: 'pointer', marginTop: 8,
               }}
               title="Remove aircraft"
             >
@@ -235,40 +243,16 @@ export default function AircraftDetail() {
           </div>
 
           {/* Info chips */}
-          <div className="flex items-center gap-3 mt-4">
-            <div
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 999, padding: '4px 10px',
-                fontSize: 12, color: 'rgba(255,255,255,0.7)',
-              }}
-            >
+          <div className="flex flex-wrap items-center gap-2 mt-5">
+            <div style={chipStyle}>
               <MdIcon name="tag" style={{ fontSize: 12 }} />
               <span className="font-mono">{ac.icao24 || 'No ICAO'}</span>
             </div>
-            <div
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 999, padding: '4px 10px',
-                fontSize: 12, color: 'rgba(255,255,255,0.7)',
-              }}
-            >
+            <div style={chipStyle}>
               <MdIcon name="schedule" style={{ fontSize: 12 }} />
               {ac.lastSeen ? timeAgo(ac.lastSeen) : 'Never seen'}
             </div>
-            <div
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 999, padding: '4px 10px',
-                fontSize: 12, color: 'rgba(255,255,255,0.7)',
-              }}
-            >
+            <div style={chipStyle}>
               <MdIcon name="route" style={{ fontSize: 12 }} />
               {trips.length} {trips.length === 1 ? 'trip' : 'trips'}
             </div>
@@ -276,7 +260,7 @@ export default function AircraftDetail() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 md:px-8 pb-20 md:pb-8" style={{ marginTop: -8 }}>
+      <div className="max-w-5xl mx-auto px-4 md:px-8 pb-20 md:pb-8 mt-5">
         {/* Live trip banner */}
         {activeTrip && (
           <LiveTripBanner
@@ -286,7 +270,7 @@ export default function AircraftDetail() {
         )}
 
         {/* Trip history */}
-        <div className="flex items-center justify-between mb-4 mt-2">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold" style={{ color: 'var(--color-text-primary)' }}>
             Trip History
           </h2>
@@ -297,28 +281,28 @@ export default function AircraftDetail() {
 
         {trips.length === 0 ? (
           <div
-            className="text-center py-12"
+            className="text-center py-16"
             style={{
               background: 'var(--color-card)',
               borderRadius: 16,
-              border: '1px solid rgba(255,255,255,0.06)',
+              border: '1px solid var(--color-separator)',
             }}
           >
             <div
               className="inline-flex items-center justify-center mb-3"
-              style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--color-accent-dim)' }}
+              style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--color-accent-dim)' }}
             >
-              <MdIcon name="route" style={{ fontSize: 24, color: 'var(--color-accent)' }} />
+              <MdIcon name="route" style={{ fontSize: 28, color: 'var(--color-accent)' }} />
             </div>
-            <p className="text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+            <p className="text-[15px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>
               No trips recorded yet
             </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-tertiary)' }}>
+            <p className="text-[13px] mt-1" style={{ color: 'var(--color-text-tertiary)', maxWidth: 280, margin: '4px auto 0' }}>
               Trips are automatically saved when flights are detected
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
             {trips.map(trip => (
               <TripCard
                 key={trip.id}
