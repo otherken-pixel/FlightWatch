@@ -29,10 +29,13 @@ function debouncedFirestoreSave(uid, dataFn) {
 }
 
 // Immediate Firestore save for critical changes (aircraft add/remove)
-function immediateFirestoreSave(uid, dataFn) {
+function immediateFirestoreSave(uid, dataFn, onError) {
   clearTimeout(firestoreSaveTimeout);
   const data = dataFn();
-  saveUserData(uid, { ...data, updatedAt: Date.now() }).catch(console.warn);
+  saveUserData(uid, { ...data, updatedAt: Date.now() }).catch((err) => {
+    console.warn('[FlightWatch] Cloud save failed:', err);
+    if (onError) onError(err);
+  });
 }
 
 const useStore = create((set, get) => ({
@@ -115,6 +118,11 @@ const useStore = create((set, get) => ({
       if (Object.keys(updates).length > 0) set(updates);
     } catch (err) {
       console.warn('[FlightWatch] Failed to load cloud data:', err);
+      get().addToast({
+        type: 'error',
+        title: 'Cloud Sync Error',
+        message: 'Could not load your data from the cloud.',
+      });
     }
   },
 
@@ -141,7 +149,13 @@ const useStore = create((set, get) => ({
       notifications,
       apiKeys,
       settings,
-    }));
+    }), (err) => {
+      get().addToast({
+        type: 'error',
+        title: 'Sync Failed',
+        message: 'Could not save to cloud. Changes saved locally.',
+      });
+    });
   },
 
   // Actions
