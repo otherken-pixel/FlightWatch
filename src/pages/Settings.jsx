@@ -119,7 +119,7 @@ export default function Settings() {
   return (
     <div className="flex-1 overflow-y-auto">
       {/* Page header */}
-      <div className="sky-gradient" style={{ padding: '40px 24px 32px', position: 'relative' }}>
+      <div className="sky-gradient" style={{ padding: '40px 24px 24px', position: 'relative' }}>
         <div style={{ position: 'relative', zIndex: 1 }} className="max-w-3xl mx-auto">
           <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px', lineHeight: 1.1 }}>
             Settings
@@ -127,7 +127,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 md:px-8 pb-24 md:pb-8" style={{ marginTop: -10 }}>
+      <div className="max-w-3xl mx-auto px-4 md:px-8 pb-24 md:pb-8 mt-4">
         {/* ── Add Aircraft ── */}
         <SectionHeader>Add Aircraft</SectionHeader>
         <GroupedSection>
