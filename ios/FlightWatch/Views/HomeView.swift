@@ -6,38 +6,28 @@ struct HomeView: View {
     @Environment(FlightWatchViewModel.self) private var vm
 
     var body: some View {
-        NavigationStack {
-            List {
-                // Stats banner
-                Section {
-                    StatsRow(airborne: vm.airborneCount, totalTrips: vm.totalTrips)
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                }
+        @Bindable var vm = vm
 
-                // Aircraft list
-                Section {
-                    if vm.sortedAircraft.isEmpty {
-                        emptyState
-                    } else {
-                        ForEach(vm.sortedAircraft) { plane in
-                            NavigationLink(value: plane) {
-                                AircraftRow(aircraft: plane)
-                            }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    vm.deleteAircraft(plane)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
+        NavigationStack {
+            Group {
+                if vm.aircraft.isEmpty {
+                    ContentUnavailableView {
+                        Label("No Aircraft", systemImage: "airplane.circle")
+                    } description: {
+                        Text("Start tracking by adding your first aircraft.")
+                    } actions: {
+                        Button {
+                            vm.isAddAircraftPresented = true
+                        } label: {
+                            Text("Add Aircraft")
                         }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.regular)
                     }
-                } header: {
-                    Text("Tracked Aircraft")
+                } else {
+                    aircraftList
                 }
             }
-            .listStyle(.insetGrouped)
             .navigationTitle("Aircraft")
             .navigationDestination(for: Aircraft.self) { plane in
                 AircraftDetailView(aircraft: plane)
@@ -50,52 +40,70 @@ struct HomeView: View {
                         Image(systemName: "plus.circle.fill")
                             .font(.title3)
                     }
+                    .accessibilityLabel("Add Aircraft")
                 }
             }
-            .sheet(isPresented: Bindable(vm).isAddAircraftPresented) {
+            .sheet(isPresented: $vm.isAddAircraftPresented) {
                 AddAircraftSheet()
             }
         }
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "airplane.circle")
-                .font(.system(size: 48))
-                .foregroundStyle(.tertiary)
-            Text("No Aircraft Tracked")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            Text("Tap + to add your first aircraft")
-                .font(.subheadline)
-                .foregroundStyle(.tertiary)
+    // MARK: - Aircraft List
+
+    private var aircraftList: some View {
+        List {
+            // Stats row directly below large title
+            Section {
+                StatsGrid(airborne: vm.airborneCount, totalTrips: vm.totalTrips)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
+
+            // Tracked aircraft
+            Section("Tracked Aircraft") {
+                ForEach(vm.sortedAircraft) { plane in
+                    NavigationLink(value: plane) {
+                        AircraftRow(aircraft: plane)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            withAnimation {
+                                vm.deleteAircraft(plane)
+                            }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                }
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
-        .listRowBackground(Color.clear)
+        .listStyle(.insetGrouped)
     }
 }
 
-// MARK: - Stats Row
+// MARK: - Stats Grid
 
-private struct StatsRow: View {
+private struct StatsGrid: View {
     let airborne: Int
     let totalTrips: Int
 
     var body: some View {
-        HStack(spacing: 12) {
-            StatCard(
-                icon: "airplane.departure",
-                label: "Live",
-                value: "\(airborne)",
-                tint: .green
-            )
-            StatCard(
-                icon: "point.topleft.down.to.point.bottomright.curvepath",
-                label: "Trips",
-                value: "\(totalTrips)",
-                tint: .blue
-            )
+        Grid(horizontalSpacing: 12, verticalSpacing: 0) {
+            GridRow {
+                StatCard(
+                    icon: "airplane.departure",
+                    label: "Live",
+                    value: "\(airborne)",
+                    tint: .green
+                )
+                StatCard(
+                    icon: "point.topleft.down.to.point.bottomright.curvepath",
+                    label: "Trips",
+                    value: "\(totalTrips)",
+                    tint: .blue
+                )
+            }
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -120,11 +128,12 @@ private struct StatCard: View {
             }
             Text(value)
                 .font(.system(.title, design: .rounded, weight: .bold))
-                .foregroundStyle(.primary)
+                .contentTransition(.numericText())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
         .background(.regularMaterial, in: .rect(cornerRadius: 14))
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -135,23 +144,21 @@ private struct AircraftRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            // Emoji avatar
             Text(aircraft.emoji)
                 .font(.title)
                 .frame(width: 48, height: 48)
                 .background(
-                    aircraft.color.opacity(0.15),
+                    aircraft.statusTint.opacity(0.12),
                     in: .rect(cornerRadius: 12)
                 )
 
-            // Info
             VStack(alignment: .leading, spacing: 3) {
                 Text(aircraft.nickname)
                     .font(.headline)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Text(aircraft.tailNumber)
-                        .font(.subheadline)
+                        .font(.subheadline.monospaced())
                         .foregroundStyle(.secondary)
 
                     if !aircraft.aircraftType.isEmpty {
@@ -163,14 +170,21 @@ private struct AircraftRow: View {
                             .lineLimit(1)
                     }
                 }
+
+                if let lastSeen = aircraft.lastSeen {
+                    Text(lastSeen, format: .relative(presentation: .named))
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
             }
 
             Spacer()
 
-            // Status badge
             StatusBadge(status: aircraft.status)
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(aircraft.nickname), \(aircraft.tailNumber), \(aircraft.status.label)")
     }
 }
 
@@ -194,16 +208,18 @@ struct StatusBadge: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
         .background(status.tint.opacity(0.12), in: .capsule)
+        .accessibilityLabel(status.label)
     }
 }
 
-// MARK: - Aircraft Detail (Stub)
+// MARK: - Aircraft Detail
 
 struct AircraftDetailView: View {
     let aircraft: Aircraft
 
     var body: some View {
         List {
+            // Hero
             Section {
                 VStack(spacing: 12) {
                     Text(aircraft.emoji)
@@ -213,6 +229,7 @@ struct AircraftDetailView: View {
                     Text(aircraft.tailNumber)
                         .font(.subheadline.monospaced())
                         .foregroundStyle(.secondary)
+                    StatusBadge(status: aircraft.status)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical)
@@ -221,10 +238,15 @@ struct AircraftDetailView: View {
 
             Section("Details") {
                 LabeledContent("Aircraft Type", value: aircraft.aircraftType.isEmpty ? "—" : aircraft.aircraftType)
-                LabeledContent("ICAO24", value: aircraft.icao24.isEmpty ? "—" : aircraft.icao24.uppercased())
+                LabeledContent("ICAO24") {
+                    Text(aircraft.icao24.isEmpty ? "—" : aircraft.icao24.uppercased())
+                        .monospaced()
+                }
                 LabeledContent("Status", value: aircraft.status.label)
                 if let lastSeen = aircraft.lastSeen {
-                    LabeledContent("Last Seen", value: lastSeen.formatted(.relative(presentation: .named)))
+                    LabeledContent("Last Seen") {
+                        Text(lastSeen, format: .relative(presentation: .named))
+                    }
                 }
             }
 
@@ -259,6 +281,10 @@ struct AddAircraftSheet: View {
 
     private let emojiOptions = ["✈️", "🛩️", "🛫", "🛬", "🚁", "🪂"]
 
+    private var isValid: Bool {
+        !tailNumber.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -270,7 +296,7 @@ struct AddAircraftSheet: View {
                     TextField("ICAO24 Hex (optional)", text: $icao24)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
-                        .font(.body.monospaced())
+                        .monospaced()
 
                     TextField("Nickname (optional)", text: $nickname)
 
@@ -278,7 +304,10 @@ struct AddAircraftSheet: View {
                 }
 
                 Section("Icon") {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 6), spacing: 12) {
+                    LazyVGrid(
+                        columns: Array(repeating: GridItem(.flexible()), count: 6),
+                        spacing: 12
+                    ) {
                         ForEach(emojiOptions, id: \.self) { emoji in
                             Button {
                                 selectedEmoji = emoji
@@ -301,6 +330,7 @@ struct AddAircraftSheet: View {
                                     )
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel(emojiAccessibilityLabel(emoji))
                         }
                     }
                     .padding(.vertical, 4)
@@ -324,10 +354,22 @@ struct AddAircraftSheet: View {
                         vm.addAircraft(plane)
                         dismiss()
                     }
-                    .disabled(tailNumber.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(!isValid)
                     .fontWeight(.semibold)
                 }
             }
+        }
+    }
+
+    private func emojiAccessibilityLabel(_ emoji: String) -> String {
+        switch emoji {
+        case "✈️":  "Airliner"
+        case "🛩️":  "Small airplane"
+        case "🛫":  "Departing"
+        case "🛬":  "Arriving"
+        case "🚁":  "Helicopter"
+        case "🪂":  "Parachute"
+        default:    "Aircraft icon"
         }
     }
 }
@@ -337,6 +379,13 @@ struct AddAircraftSheet: View {
 #Preview("Home") {
     HomeView()
         .environment(FlightWatchViewModel.preview)
+}
+
+#Preview("Home - Empty") {
+    let vm = FlightWatchViewModel()
+    vm.aircraft = []
+    return HomeView()
+        .environment(vm)
 }
 
 #Preview("Add Aircraft") {

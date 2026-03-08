@@ -10,6 +10,7 @@ struct MainTabView: View {
             Tab("Aircraft", systemImage: "airplane", value: .home) {
                 HomeView()
             }
+            .badge(vm.airborneCount > 0 ? vm.airborneCount : 0)
 
             Tab("History", systemImage: "clock.arrow.circlepath", value: .history) {
                 HistoryView()
