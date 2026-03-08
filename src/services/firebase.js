@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
 import { initializeFirestore, persistentLocalCache } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -23,6 +23,8 @@ if (firebaseConfigured) {
   auth = getAuth(app);
   db = initializeFirestore(app, { localCache: persistentLocalCache() });
   googleProvider = new GoogleAuthProvider();
+  // Handle redirect result after page reload (from signInWithRedirect)
+  getRedirectResult(auth).catch(() => {});
 }
 
 export { auth, db, googleProvider };
