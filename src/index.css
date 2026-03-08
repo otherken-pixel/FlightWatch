@@ -2,56 +2,133 @@
 @import "leaflet/dist/leaflet.css";
 
 /* ════════════════════════════════════════════════════════════
-   FLIGHTWATCH — iOS-ALIGNED DESIGN SYSTEM
-   Apple HIG-inspired · OLED blacks · Semantic color roles
-   Sky gradient branding · 8pt spacing grid · Spring animations
+   FLIGHTWATCH — ADAPTIVE DESIGN SYSTEM
+   Light + Dark mode · iOS-inspired · Semantic color tokens
 ════════════════════════════════════════════════════════════ */
 
-@theme {
-  /* Core palette — OLED-optimised with iOS system alignment */
-  --color-bg: #000000;
-  --color-bg-elevated: #0A0A0F;
-  --color-card: #131317;
-  --color-card-mid: #1C1C22;
-  --color-card-high: #26262E;
+/* ── Light Mode (default) ── */
+:root {
+  --color-bg: #F2F2F7;
+  --color-bg-elevated: #FFFFFF;
+  --color-card: #FFFFFF;
+  --color-card-mid: #F2F2F7;
+  --color-card-high: #E5E5EA;
+  --color-separator: rgba(60, 60, 67, 0.12);
 
-  /* Typography — iOS semantic labels */
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: rgba(255,255,255,0.60);
-  --color-text-tertiary: rgba(255,255,255,0.35);
+  --color-text-primary: #000000;
+  --color-text-secondary: rgba(60, 60, 67, 0.60);
+  --color-text-tertiary: rgba(60, 60, 67, 0.30);
 
-  /* Accent — iOS system blue */
   --color-accent: #007AFF;
-  --color-accent-dim: rgba(0,122,255,0.15);
+  --color-accent-dim: rgba(0, 122, 255, 0.10);
+  --color-accent-hover: rgba(0, 122, 255, 0.06);
 
-  /* Status colors — iOS system palette */
   --color-go: #34C759;
   --color-caution: #FF9F0A;
-  --color-nogo: #FF453A;
-  --color-lifr: #5856D6;
+  --color-nogo: #FF3B30;
 
-  /* Brand gradient endpoints */
+  --color-glass: rgba(255, 255, 255, 0.72);
+  --color-glass-border: rgba(60, 60, 67, 0.08);
+  --color-glass-nav: rgba(249, 249, 249, 0.94);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+  --shadow-button: 0 2px 8px rgba(0, 122, 255, 0.20);
+
   --color-sky-night: #001233;
   --color-sky-horizon: #0077B6;
   --color-sky-teal: #48CAE4;
 
-  /* Fonts — DM Sans for body, system fonts for display */
-  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  --font-mono: 'Roboto Mono', 'SF Mono', monospace;
-  --font-display: 'DM Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  color-scheme: light dark;
+}
 
-  /* Legacy compatibility aliases for existing Tailwind classes */
-  --color-navy: #0A0A0F;
-  --color-navy-light: rgba(255,255,255,0.08);
-  --color-navy-mid: #131317;
+/* ── Dark Mode ── */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --color-bg: #000000;
+    --color-bg-elevated: #1C1C1E;
+    --color-card: #1C1C1E;
+    --color-card-mid: #2C2C2E;
+    --color-card-high: #3A3A3C;
+    --color-separator: rgba(84, 84, 88, 0.36);
+
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: rgba(235, 235, 245, 0.60);
+    --color-text-tertiary: rgba(235, 235, 245, 0.30);
+
+    --color-accent-dim: rgba(0, 122, 255, 0.18);
+    --color-accent-hover: rgba(0, 122, 255, 0.10);
+
+    --color-nogo: #FF453A;
+
+    --color-glass: rgba(28, 28, 30, 0.72);
+    --color-glass-border: rgba(255, 255, 255, 0.08);
+    --color-glass-nav: rgba(22, 22, 24, 0.94);
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.20);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.30);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.40);
+    --shadow-button: 0 2px 12px rgba(0, 122, 255, 0.30);
+  }
+}
+
+/* Force dark mode class override */
+:root.dark {
+  --color-bg: #000000;
+  --color-bg-elevated: #1C1C1E;
+  --color-card: #1C1C1E;
+  --color-card-mid: #2C2C2E;
+  --color-card-high: #3A3A3C;
+  --color-separator: rgba(84, 84, 88, 0.36);
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: rgba(235, 235, 245, 0.60);
+  --color-text-tertiary: rgba(235, 235, 245, 0.30);
+  --color-accent-dim: rgba(0, 122, 255, 0.18);
+  --color-accent-hover: rgba(0, 122, 255, 0.10);
+  --color-nogo: #FF453A;
+  --color-glass: rgba(28, 28, 30, 0.72);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass-nav: rgba(22, 22, 24, 0.94);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.20);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.40);
+  --shadow-button: 0 2px 12px rgba(0, 122, 255, 0.30);
+}
+
+@theme {
+  --color-bg: var(--color-bg);
+  --color-bg-elevated: var(--color-bg-elevated);
+  --color-card: var(--color-card);
+  --color-card-mid: var(--color-card-mid);
+  --color-card-high: var(--color-card-high);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-tertiary: var(--color-text-tertiary);
+  --color-accent: #007AFF;
+  --color-accent-dim: var(--color-accent-dim);
+  --color-go: #34C759;
+  --color-caution: #FF9F0A;
+  --color-nogo: var(--color-nogo);
+  --color-sky-night: #001233;
+  --color-sky-horizon: #0077B6;
+  --color-sky-teal: #48CAE4;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+
+  /* Legacy aliases for existing Tailwind classes */
+  --color-navy: var(--color-bg-elevated);
+  --color-navy-light: var(--color-separator);
+  --color-navy-mid: var(--color-card);
   --color-amber: #007AFF;
   --color-amber-light: #3DA0FF;
-  --color-sky: #FFFFFF;
-  --color-sky-dim: rgba(255,255,255,0.60);
+  --color-sky: var(--color-text-primary);
+  --color-sky-dim: var(--color-text-secondary);
   --color-success: #34C759;
   --color-warning: #FF9F0A;
-  --color-danger: #FF453A;
+  --color-danger: var(--color-nogo);
 }
 
 *, *::before, *::after {
@@ -68,39 +145,131 @@ html, body, #root {
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-bg-elevated);
+  background: var(--color-bg);
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'cv11', 'ss01';
   line-height: 1.5;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ── Material Symbols ── */
 .material-symbols-rounded {
   font-family: 'Material Symbols Rounded';
-  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   display: inline-block;
   vertical-align: middle;
   line-height: 1;
 }
 
-/* ── Ultra-thin scrollbar (iOS-style) ── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+::-webkit-scrollbar-thumb { background: var(--color-card-high); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-tertiary); }
 
-/* ── Interactive transitions — iOS spring easing ── */
+/* ── Interactive transitions ── */
 button, a {
-  transition: opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-              transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 0.2s ease, transform 0.15s ease, background-color 0.2s ease;
 }
 button:active { transform: scale(0.97); }
 
-/* ── Sky gradient — Brand hero gradient ── */
+/* ── Sky gradient — Brand hero ── */
 .sky-gradient {
   background: linear-gradient(160deg, #001233 0%, #023E8A 40%, #0077B6 70%, #48CAE4 100%);
+}
+
+/* ── Glassmorphism ── */
+.glass {
+  background: var(--color-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 16px;
+}
+
+.glass-nav {
+  background: var(--color-glass-nav);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--color-separator);
+}
+
+/* ── iOS Grouped Section ── */
+.grouped-section {
+  background: var(--color-card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.grouped-section > * + * {
+  border-top: 1px solid var(--color-separator);
+}
+.grouped-row {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Modern Input ── */
+.modern-input {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 16px;
+  font-family: var(--font-sans);
+  background: var(--color-card-mid);
+  border: 1px solid var(--color-separator);
+  border-radius: 10px;
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.modern-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-dim);
+}
+.modern-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* ── iOS Toggle ── */
+.ios-toggle {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+  flex-shrink: 0;
+}
+.ios-toggle[data-checked="true"] { background: var(--color-go); }
+.ios-toggle[data-checked="false"] { background: var(--color-card-high); }
+.ios-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 99px;
+  background: #FFFFFF;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ios-toggle[data-checked="true"] .ios-toggle-knob {
+  transform: translateX(20px);
+}
+
+/* ── Section Header ── */
+.section-header {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary);
+  padding: 0 16px;
+  margin-bottom: 6px;
 }
 
 /* ── Leaflet overrides ── */
@@ -113,26 +282,26 @@ button:active { transform: scale(0.97); }
 .leaflet-control-zoom a {
   background: var(--color-card) !important;
   color: var(--color-text-primary) !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  border-color: var(--color-separator) !important;
 }
 .leaflet-control-attribution {
-  background: rgba(10,10,15,0.85) !important;
+  background: var(--color-glass) !important;
   backdrop-filter: blur(10px);
   color: var(--color-text-tertiary) !important;
   font-size: 9px !important;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 .leaflet-control-attribution a {
   color: var(--color-accent) !important;
 }
 
-/* ── Animations — iOS spring easing ── */
+/* ── Animations ── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(60px); }
+  from { opacity: 0; transform: translateY(40px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes slideUp {
@@ -143,81 +312,37 @@ button:active { transform: scale(0.97); }
   from { transform: translateY(0); opacity: 1; }
   to { transform: translateY(100%); opacity: 0; }
 }
-@keyframes liftoff {
-  0% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-20px) scale(1.1); }
-  100% { transform: translateY(-8px) scale(1); }
-}
 @keyframes pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.5); opacity: 0.5; }
 }
-@keyframes scorePop {
-  0% { transform: scale(0.75); opacity: 0; }
-  75% { transform: scale(1.06); }
-  100% { transform: scale(1); opacity: 1; }
-}
-@keyframes floatDevice {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
 
-.toast-enter { animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.toast-exit { animation: slideDown 0.3s ease-in forwards; }
-.liftoff-icon { animation: liftoff 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.fade-in { animation: fadeIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-.float-device { animation: floatDevice 3s ease-in-out infinite; }
+.toast-enter { animation: slideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1); }
+.toast-exit { animation: slideDown 0.25s ease-in forwards; }
+.fade-in { animation: fadeIn 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+.fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.32, 0.72, 0, 1) both; }
 
-/* Staggered fade-in delays */
-.fade-in-delay-1 { animation-delay: 0.1s; }
-.fade-in-delay-2 { animation-delay: 0.2s; }
-.fade-in-delay-3 { animation-delay: 0.3s; }
-.fade-in-delay-4 { animation-delay: 0.4s; }
+.fade-in-delay-1 { animation-delay: 0.05s; }
+.fade-in-delay-2 { animation-delay: 0.10s; }
+.fade-in-delay-3 { animation-delay: 0.15s; }
+.fade-in-delay-4 { animation-delay: 0.20s; }
 
-/* ── Pulse dot for airborne status ── */
-.pulse-dot {
-  animation: pulse 2s ease-in-out infinite;
-}
+.pulse-dot { animation: pulse 2s ease-in-out infinite; }
 
-/* ── Plane marker ── */
-.plane-marker {
-  background: none !important;
-  border: none !important;
-}
+.plane-marker { background: none !important; border: none !important; }
 .plane-icon {
   font-size: 28px;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
   transition: transform 0.5s ease;
 }
 
-/* ── Glassmorphism utility — iOS vibrancy ── */
-.glass {
-  background: rgba(10,10,15,0.65);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 16px;
-}
-
-/* ── Glass navigation bar — iOS translucent nav ── */
-.glass-nav {
-  background: rgba(10,10,15,0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
-/* ── Font utilities ── */
 .font-mono { font-family: var(--font-mono); }
-.font-display { font-family: var(--font-display); }
 
-/* ── Reduced motion support ── */
+/* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .float-device { animation: none; }
 }
