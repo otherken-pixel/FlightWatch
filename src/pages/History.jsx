@@ -77,7 +77,12 @@ export default function History() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-[18px]">{flight.emoji || '✈️'}</span>
+                        <div
+                          className="flex items-center justify-center shrink-0"
+                          style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--color-accent-dim)' }}
+                        >
+                          <MdIcon name="flight" style={{ fontSize: 17, color: 'var(--color-accent)' }} />
+                        </div>
                         <span className="font-semibold text-[15px]" style={{ color: 'var(--color-text-primary)' }}>
                           {flight.nickname || flight.tailNumber}
                         </span>

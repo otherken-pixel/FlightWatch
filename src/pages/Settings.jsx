@@ -183,7 +183,12 @@ export default function Settings() {
           ) : (
             aircraft.map(ac => (
               <Row key={ac.id}>
-                <span className="text-[20px]">{ac.emoji}</span>
+                <div
+                  className="flex items-center justify-center shrink-0"
+                  style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-accent-dim)' }}
+                >
+                  <MdIcon name="flight" style={{ fontSize: 18, color: 'var(--color-accent)' }} />
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-[15px] truncate" style={{ color: 'var(--color-text-primary)' }}>{ac.nickname}</div>
                   <div className="text-[12px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>{ac.tailNumber} · {ac.icao24 || 'No ICAO24'}</div>

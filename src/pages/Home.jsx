@@ -9,11 +9,11 @@ function MdIcon({ name, style }) {
 }
 
 const statusColors = {
-  airborne: 'var(--color-go)',
-  taxiing: 'var(--color-caution)',
-  on_ground: 'var(--color-text-tertiary)',
-  landed: 'var(--color-accent)',
-  unknown: 'var(--color-text-tertiary)',
+  airborne: { text: '#34C759', bg: 'rgba(52, 199, 89, 0.12)' },
+  taxiing: { text: '#FF9F0A', bg: 'rgba(255, 159, 10, 0.12)' },
+  on_ground: { text: '#8E8E93', bg: 'rgba(142, 142, 147, 0.12)' },
+  landed: { text: '#007AFF', bg: 'rgba(0, 122, 255, 0.10)' },
+  unknown: { text: '#8E8E93', bg: 'rgba(142, 142, 147, 0.12)' },
 };
 
 const statusLabels = {
@@ -26,7 +26,7 @@ const statusLabels = {
 
 function AircraftCard({ aircraft, tripCount, activeTrip, onClick }) {
   const isLive = aircraft.status === 'airborne' || aircraft.status === 'taxiing';
-  const color = statusColors[aircraft.status] || statusColors.unknown;
+  const status = statusColors[aircraft.status] || statusColors.unknown;
 
   return (
     <button
@@ -34,7 +34,7 @@ function AircraftCard({ aircraft, tripCount, activeTrip, onClick }) {
       className="w-full text-left transition-all"
       style={{
         background: 'var(--color-card)',
-        border: `1px solid ${isLive ? 'color-mix(in srgb, var(--color-go) 25%, transparent)' : 'var(--color-separator)'}`,
+        border: `1px solid ${isLive ? 'rgba(52,199,89,0.25)' : 'var(--color-separator)'}`,
         borderRadius: 14,
         padding: '16px',
         cursor: 'pointer',
@@ -48,11 +48,10 @@ function AircraftCard({ aircraft, tripCount, activeTrip, onClick }) {
             className="flex items-center justify-center"
             style={{
               width: 44, height: 44, borderRadius: 12,
-              background: 'var(--color-card-mid)',
-              fontSize: 22,
+              background: 'var(--color-accent-dim)',
             }}
           >
-            {aircraft.emoji}
+            <MdIcon name="flight" style={{ fontSize: 22, color: 'var(--color-accent)' }} />
           </div>
           <div>
             <div className="font-semibold text-[15px]" style={{ color: 'var(--color-text-primary)' }}>
@@ -66,7 +65,7 @@ function AircraftCard({ aircraft, tripCount, activeTrip, onClick }) {
 
         <div
           className="status-pill"
-          style={{ background: 'var(--color-accent-dim)', color }}
+          style={{ background: status.bg, color: status.text }}
         >
           {isLive && (
             <div className="pulse-dot" style={{ width: 6, height: 6, borderRadius: 99, background: 'currentColor' }} />
@@ -288,13 +287,13 @@ export default function Home() {
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2 text-[14px] font-semibold"
+            className="flex items-center gap-1 px-3.5 py-2 text-[15px] font-semibold"
             style={{
-              background: 'var(--color-accent)', color: '#fff', borderRadius: 10,
-              border: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-button)', fontFamily: 'inherit',
+              background: 'var(--color-accent-dim)', color: 'var(--color-accent)', borderRadius: 10,
+              border: 'none', cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
-            <MdIcon name="add" style={{ fontSize: 18, color: '#fff' }} />
+            <MdIcon name="add" style={{ fontSize: 20, color: 'var(--color-accent)' }} />
             Add
           </button>
         </div>
