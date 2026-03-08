@@ -10,7 +10,7 @@ struct SettingsView: View {
 
         NavigationStack {
             Form {
-                // Tracked Aircraft
+                // ── Tracked Aircraft ──
                 Section {
                     if vm.sortedAircraft.isEmpty {
                         Text("No aircraft tracked yet")
@@ -18,9 +18,13 @@ struct SettingsView: View {
                     } else {
                         ForEach(vm.sortedAircraft) { plane in
                             AircraftSettingsRow(aircraft: plane)
-                        }
-                        .onDelete { offsets in
-                            vm.deleteAircraft(at: offsets)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        withAnimation { vm.deleteAircraft(plane) }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
                         }
                     }
 
@@ -35,8 +39,8 @@ struct SettingsView: View {
                     Text("Swipe left on any aircraft to remove it from tracking.")
                 }
 
-                // Notifications
-                Section {
+                // ── Notifications ──
+                Section("Notifications") {
                     Toggle(isOn: $vm.notifications.takeoff) {
                         Label("Takeoff Alerts", systemImage: "airplane.departure")
                     }
@@ -49,22 +53,33 @@ struct SettingsView: View {
                     Toggle(isOn: $vm.notifications.sound) {
                         Label("Sound", systemImage: "speaker.wave.2")
                     }
-                } header: {
-                    Text("Notifications")
                 }
 
-                // Map & Polling
+                // ── Map & Data ──
                 Section {
-                    Picker("Map Style", selection: $vm.appSettings.mapStyle) {
+                    Picker(selection: $vm.appSettings.mapStyle) {
                         ForEach(MapStyle.allCases) { style in
-                            Text(style.label).tag(style)
+                            Label(style.label, systemImage: style.icon)
+                                .tag(style)
                         }
+                    } label: {
+                        Label("Map Style", systemImage: "map")
                     }
 
-                    Picker("Refresh Interval", selection: $vm.appSettings.pollInterval) {
+                    Picker(selection: $vm.appSettings.pollInterval) {
                         ForEach(PollInterval.allCases) { interval in
                             Text(interval.label).tag(interval)
                         }
+                    } label: {
+                        Label("Refresh Interval", systemImage: "arrow.clockwise")
+                    }
+
+                    Picker(selection: $vm.appSettings.units) {
+                        ForEach(AppSettings.Units.allCases) { unit in
+                            Text(unit.label).tag(unit)
+                        }
+                    } label: {
+                        Label("Units", systemImage: "ruler")
                     }
                 } header: {
                     Text("Map & Data")
@@ -72,17 +87,17 @@ struct SettingsView: View {
                     Text("Shorter intervals use more data but update positions faster.")
                 }
 
-                // API Keys
+                // ── API Keys ──
                 Section {
                     SecureFieldRow(
                         label: "OpenSky",
-                        icon: "key",
+                        icon: "key.fill",
                         placeholder: "username:password",
                         text: $vm.apiKeys.openSky
                     )
                     SecureFieldRow(
                         label: "OpenWeather",
-                        icon: "cloud.sun",
+                        icon: "cloud.sun.fill",
                         placeholder: "API key",
                         text: $vm.apiKeys.openWeather
                     )
@@ -95,33 +110,44 @@ struct SettingsView: View {
                 } header: {
                     Text("API Keys")
                 } footer: {
-                    Text("Optional. Providing credentials can increase rate limits and enable additional data sources.")
+                    Text("Credentials are stored locally on this device and are never sent to third-party servers.")
                 }
 
-                // About
-                Section {
+                // ── About ──
+                Section("About") {
                     LabeledContent("Version", value: "1.0.0")
                     LabeledContent("Build", value: "1")
 
                     Link(destination: URL(string: "https://openskynetwork.github.io/opensky-api/")!) {
                         Label("OpenSky Network API", systemImage: "arrow.up.right.square")
                     }
-                } header: {
-                    Text("About")
                 }
 
-                // Danger Zone
+                // ── Danger Zone ──
                 Section {
                     Button(role: .destructive) {
-                        vm.clearHistory()
+                        vm.isConfirmingClearHistory = true
                     } label: {
                         Label("Clear Flight History", systemImage: "trash")
                     }
+                } footer: {
+                    Text("Permanently removes all recorded flights.")
                 }
             }
             .navigationTitle("Settings")
             .sheet(isPresented: $vm.isAddAircraftPresented) {
                 AddAircraftSheet()
+            }
+            .confirmationDialog(
+                "Clear Flight History",
+                isPresented: $vm.isConfirmingClearHistory,
+                titleVisibility: .visible
+            ) {
+                Button("Delete All Flights", role: .destructive) {
+                    withAnimation { vm.clearHistory() }
+                }
+            } message: {
+                Text("This will permanently delete all \(vm.flightHistory.count) recorded flights. This action cannot be undone.")
             }
         }
     }
@@ -137,7 +163,7 @@ private struct AircraftSettingsRow: View {
             Text(aircraft.emoji)
                 .font(.title3)
                 .frame(width: 36, height: 36)
-                .background(aircraft.color.opacity(0.12), in: .rect(cornerRadius: 8))
+                .background(aircraft.statusTint.opacity(0.12), in: .rect(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(aircraft.nickname)
@@ -161,6 +187,8 @@ private struct AircraftSettingsRow: View {
             StatusBadge(status: aircraft.status)
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(aircraft.nickname), \(aircraft.tailNumber)")
     }
 }
 
@@ -177,15 +205,16 @@ private struct SecureFieldRow: View {
         HStack {
             Label(label, systemImage: icon)
                 .frame(width: 140, alignment: .leading)
+                .lineLimit(1)
 
             if isRevealed {
                 TextField(placeholder, text: $text)
-                    .font(.body.monospaced())
+                    .monospaced()
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             } else {
                 SecureField(placeholder, text: $text)
-                    .font(.body.monospaced())
+                    .monospaced()
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             }
@@ -198,6 +227,7 @@ private struct SecureFieldRow: View {
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(isRevealed ? "Hide \(label)" : "Show \(label)")
         }
     }
 }
