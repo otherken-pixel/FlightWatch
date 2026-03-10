@@ -2,6 +2,13 @@
   "firestore": {
     "rules": "firestore.rules"
   },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs20"
+    }
+  ],
   "hosting": {
     "public": "dist",
     "ignore": [
@@ -10,6 +17,14 @@
       "**/node_modules/**"
     ],
     "rewrites": [
+      {
+        "source": "/api/opensky/**",
+        "function": "opensky"
+      },
+      {
+        "source": "/api/weather/**",
+        "function": "weather"
+      },
       {
         "source": "**",
         "destination": "/index.html"
