@@ -12,19 +12,23 @@ import { findNearestAirport } from './airports';
 export function usePoller() {
   const intervalRef = useRef(null);
   const maxSpeedRef = useRef({});
-  const aircraft = useStore(s => s.aircraft);
   const settings = useStore(s => s.settings);
-  const notifications = useStore(s => s.notifications);
-  const updateLiveData = useStore(s => s.updateLiveData);
-  const updateAircraft = useStore(s => s.updateAircraft);
-  const addTrailPoint = useStore(s => s.addTrailPoint);
-  const addToast = useStore(s => s.addToast);
-  const startTrip = useStore(s => s.startTrip);
-  const addTripTrailPoint = useStore(s => s.addTripTrailPoint);
-  const completeTrip = useStore(s => s.completeTrip);
 
   useEffect(() => {
     const poll = async () => {
+      // Read fresh state each poll to avoid stale closures
+      const {
+        aircraft,
+        notifications,
+        updateLiveData,
+        updateAircraft,
+        addTrailPoint,
+        addToast,
+        startTrip,
+        addTripTrailPoint,
+        completeTrip,
+      } = useStore.getState();
+
       const tracked = aircraft.filter(a => a.icao24);
       if (tracked.length === 0) return;
 
@@ -154,5 +158,5 @@ export function usePoller() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [aircraft.length, settings.pollInterval]);
+  }, [settings.pollInterval]);
 }
