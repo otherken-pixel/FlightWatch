@@ -4,8 +4,6 @@ import {
   fetchOpenSkyMultiple,
   fetchAdsbLolMultiple,
   fetchAdsbLolByReg,
-  fetchAirplanesLiveMultiple,
-  fetchAirplanesLiveByReg,
 } from './api';
 import { determineFlightState, getStateTransitionEvent, isSignalLost } from './flightStateMachine';
 import { sendNotification, playNotificationSound } from './notifications';
@@ -46,35 +44,28 @@ export function usePoller() {
       try {
         const icaoList = withIcao.map(a => a.icao24);
 
-        // Query all three sources in parallel by ICAO hex; none should kill the others
-        const [openSkyResult, adsbLolResult, airplanesLiveResult] = await Promise.allSettled([
+        // Query OpenSky (via proxy) and adsb.lol (direct CORS) in parallel
+        const [openSkyResult, adsbLolResult] = await Promise.allSettled([
           icaoList.length > 0 ? fetchOpenSkyMultiple(icaoList) : Promise.resolve([]),
           icaoList.length > 0 ? fetchAdsbLolMultiple(icaoList) : Promise.resolve([]),
-          icaoList.length > 0 ? fetchAirplanesLiveMultiple(icaoList) : Promise.resolve([]),
         ]);
 
         const openSkyStates = openSkyResult.status === 'fulfilled' ? openSkyResult.value : [];
         const adsbLolStates = adsbLolResult.status === 'fulfilled' ? adsbLolResult.value : [];
-        const airplanesLiveStates = airplanesLiveResult.status === 'fulfilled' ? airplanesLiveResult.value : [];
 
         console.log('[FlightWatch] API results — OpenSky:', openSkyStates.length,
-          '| adsb.lol:', adsbLolStates.length,
-          '| airplanes.live:', airplanesLiveStates.length);
+          '| adsb.lol:', adsbLolStates.length);
         if (openSkyResult.status === 'rejected') {
           console.warn('OpenSky fetch failed:', openSkyResult.reason?.message);
         }
         if (adsbLolResult.status === 'rejected') {
           console.warn('adsb.lol fetch failed:', adsbLolResult.reason?.message);
         }
-        if (airplanesLiveResult.status === 'rejected') {
-          console.warn('airplanes.live fetch failed:', airplanesLiveResult.reason?.message);
-        }
 
-        // Merge: later sources overwrite earlier; prefer volunteer networks over OpenSky
+        // Merge: adsb.lol preferred over OpenSky
         const statesByIcao = new Map();
         for (const s of openSkyStates) statesByIcao.set(s.icao24, s);
         for (const s of adsbLolStates) statesByIcao.set(s.icao24, s);
-        for (const s of airplanesLiveStates) statesByIcao.set(s.icao24, s);
 
         // Fallback: try by registration for aircraft still missing data OR without ICAO.
         // Catches hex mismatches and aircraft that never got an ICAO24.
@@ -91,14 +82,8 @@ export function usePoller() {
             );
           };
           try {
-            const [adsbRegResult, alRegResult] = await Promise.allSettled([
-              fetchAdsbLolByReg(tailNumbers),
-              fetchAirplanesLiveByReg(tailNumbers),
-            ]);
-            const regStates = [
-              ...(adsbRegResult.status === 'fulfilled' ? adsbRegResult.value : []),
-              ...(alRegResult.status === 'fulfilled' ? alRegResult.value : []),
-            ];
+            const adsbRegResult = await fetchAdsbLolByReg(tailNumbers);
+            const regStates = adsbRegResult || [];
             for (const s of regStates) {
               const match = matchRegResult(s);
               if (match) {
