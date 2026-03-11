@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store/useStore';
-import { fetchOpenSkyMultiple, fetchAdsbLolMultiple, fetchAdsbLolByReg } from './api';
+import {
+  fetchOpenSkyMultiple,
+  fetchAdsbLolMultiple,
+  fetchAdsbLolByReg,
+  fetchAirplanesLiveMultiple,
+  fetchAirplanesLiveByReg,
+} from './api';
 import { determineFlightState, getStateTransitionEvent, isSignalLost } from './flightStateMachine';
 import { sendNotification, playNotificationSound } from './notifications';
 import { findNearestAirport } from './airports';
@@ -35,41 +41,55 @@ export function usePoller() {
       try {
         const icaoList = tracked.map(a => a.icao24);
 
-        // Query both sources in parallel; neither should kill the other
-        const [openSkyResult, adsbLolResult] = await Promise.allSettled([
+        // Query all three sources in parallel; none should kill the others
+        const [openSkyResult, adsbLolResult, airplanesLiveResult] = await Promise.allSettled([
           fetchOpenSkyMultiple(icaoList),
           fetchAdsbLolMultiple(icaoList),
+          fetchAirplanesLiveMultiple(icaoList),
         ]);
 
         const openSkyStates = openSkyResult.status === 'fulfilled' ? openSkyResult.value : [];
         const adsbLolStates = adsbLolResult.status === 'fulfilled' ? adsbLolResult.value : [];
+        const airplanesLiveStates = airplanesLiveResult.status === 'fulfilled' ? airplanesLiveResult.value : [];
 
         if (openSkyResult.status === 'rejected') {
           console.warn('OpenSky fetch failed:', openSkyResult.reason?.message);
         }
 
-        // Merge: prefer adsb.lol (better GA coverage); fill gaps with OpenSky
+        // Merge: later sources overwrite earlier; prefer volunteer networks over OpenSky
         const statesByIcao = new Map();
         for (const s of openSkyStates) statesByIcao.set(s.icao24, s);
-        for (const s of adsbLolStates) statesByIcao.set(s.icao24, s); // overwrites OpenSky
+        for (const s of adsbLolStates) statesByIcao.set(s.icao24, s);
+        for (const s of airplanesLiveStates) statesByIcao.set(s.icao24, s);
 
-        // Fallback: for aircraft still missing, try adsb.lol by registration.
+        // Fallback: for aircraft still missing, try by registration number.
         // Catches cases where hex conversion doesn't match the transponder.
         const missingAircraft = tracked.filter(a => !statesByIcao.has(a.icao24));
         if (missingAircraft.length > 0) {
           const tailNumbers = missingAircraft.map(a => a.tailNumber);
+          const matchRegResult = (s) => {
+            return missingAircraft.find(
+              a => a.tailNumber.toUpperCase() === (s.registration || s.callsign || '').toUpperCase()
+                || s.icao24 === a.icao24
+            );
+          };
           try {
-            const regStates = await fetchAdsbLolByReg(tailNumbers);
+            const [adsbRegResult, alRegResult] = await Promise.allSettled([
+              fetchAdsbLolByReg(tailNumbers),
+              fetchAirplanesLiveByReg(tailNumbers),
+            ]);
+            const regStates = [
+              ...(adsbRegResult.status === 'fulfilled' ? adsbRegResult.value : []),
+              ...(alRegResult.status === 'fulfilled' ? alRegResult.value : []),
+            ];
             for (const s of regStates) {
-              // Map reg results back using the tracked aircraft's icao24
-              const match = missingAircraft.find(
-                a => a.tailNumber.toUpperCase() === (s.callsign || '').toUpperCase()
-                  || s.icao24 === a.icao24
-              );
-              if (match) statesByIcao.set(match.icao24, { ...s, icao24: match.icao24 });
+              const match = matchRegResult(s);
+              if (match && !statesByIcao.has(match.icao24)) {
+                statesByIcao.set(match.icao24, { ...s, icao24: match.icao24 });
+              }
             }
           } catch (err) {
-            console.warn('adsb.lol reg fallback failed:', err.message);
+            console.warn('Registration fallback failed:', err.message);
           }
         }
 
