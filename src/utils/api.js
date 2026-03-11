@@ -1,44 +1,9 @@
 // ADS-B data fetching utilities
+// Calls adsb.lol and airplanes.live directly (both support CORS, no keys needed).
+// OpenSky is called via Firebase Function proxy (requires CORS proxy).
 
 /**
- * Fetch aircraft state from OpenSky Network by ICAO24 hex code
- */
-export async function fetchOpenSky(icao24, credentials = null) {
-  const url = `/api/opensky/states/all?icao24=${icao24}`;
-  const headers = {};
-  if (credentials?.username && credentials?.password) {
-    headers['Authorization'] = 'Basic ' + btoa(`${credentials.username}:${credentials.password}`);
-  }
-
-  const res = await fetch(url, { headers });
-  if (!res.ok) throw new Error(`OpenSky API error: ${res.status}`);
-
-  const data = await res.json();
-  if (!data.states || data.states.length === 0) return null;
-
-  const s = data.states[0];
-  return {
-    icao24: s[0],
-    callsign: s[1]?.trim() || '',
-    originCountry: s[2],
-    timePosition: s[3],
-    lastContact: s[4],
-    longitude: s[5],
-    latitude: s[6],
-    baroAltitude: s[7],
-    onGround: s[8],
-    velocity: s[9],       // m/s
-    heading: s[10],        // degrees from north
-    verticalRate: s[11],   // m/s
-    geoAltitude: s[13],
-    squawk: s[14],
-    spi: s[15],
-    positionSource: s[16],
-  };
-}
-
-/**
- * Fetch multiple aircraft states from OpenSky
+ * Fetch multiple aircraft states from OpenSky (via proxy)
  */
 export async function fetchOpenSkyMultiple(icao24List) {
   if (icao24List.length === 0) return [];
@@ -132,8 +97,6 @@ const READSB_STALE_THRESHOLD_S = 300;
 /**
  * Normalize a single readsb-format aircraft record to our shared state shape.
  * Works with adsb.lol, airplanes.live, and adsb.fi (all use the same format).
- * Uses `seen_pos` (seconds since last position) when available for staleness,
- * falling back to `seen` (seconds since any message).
  */
 function normalizeReadsbRecord(a, source) {
   const seenPosSecs = a.seen_pos ?? a.seen ?? 0;
@@ -173,10 +136,11 @@ function parseReadsbResponse(data, source) {
     .filter(r => !r._stale && r.latitude != null && r.longitude != null);
 }
 
-// ── adsb.lol ──────────────────────────────────────────────────────────
+// ── adsb.lol (direct CORS calls) ────────────────────────────────────
 
 export async function fetchAdsbLol(icao24) {
-  const res = await fetch(`/api/adsblol/v2/icao/${icao24}/`);
+  const url = `https://api.adsb.lol/v2/icao/${icao24}`;
+  const res = await fetch(url);
   if (!res.ok) return null;
   const records = parseReadsbResponse(await res.json(), 'adsblol');
   return records.length > 0 ? records[0] : null;
@@ -184,31 +148,47 @@ export async function fetchAdsbLol(icao24) {
 
 export async function fetchAdsbLolMultiple(icao24List) {
   if (icao24List.length === 0) return [];
-  const res = await fetch(`/api/adsblol/v2/icao/${icao24List.join(',')}/`);
-  if (!res.ok) return [];
+  const url = `https://api.adsb.lol/v2/icao/${icao24List.join(',')}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn(`[adsb.lol] ${url} → ${res.status}`);
+    return [];
+  }
   return parseReadsbResponse(await res.json(), 'adsblol');
 }
 
 export async function fetchAdsbLolByReg(registrations) {
   if (registrations.length === 0) return [];
-  const res = await fetch(`/api/adsblol/v2/reg/${registrations.join(',')}/`);
-  if (!res.ok) return [];
+  const url = `https://api.adsb.lol/v2/reg/${registrations.join(',')}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn(`[adsb.lol reg] ${url} → ${res.status}`);
+    return [];
+  }
   return parseReadsbResponse(await res.json(), 'adsblol');
 }
 
-// ── airplanes.live (additional feeder network for better coverage) ────
+// ── airplanes.live (direct CORS calls) ──────────────────────────────
 
 export async function fetchAirplanesLiveMultiple(icao24List) {
   if (icao24List.length === 0) return [];
-  const res = await fetch(`/api/airplaneslive/v2/hex/${icao24List.join(',')}`);
-  if (!res.ok) return [];
+  const url = `https://api.airplanes.live/v2/hex/${icao24List.join(',')}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn(`[airplanes.live] ${url} → ${res.status}`);
+    return [];
+  }
   return parseReadsbResponse(await res.json(), 'airplaneslive');
 }
 
 export async function fetchAirplanesLiveByReg(registrations) {
   if (registrations.length === 0) return [];
-  const res = await fetch(`/api/airplaneslive/v2/reg/${registrations.join(',')}`);
-  if (!res.ok) return [];
+  const url = `https://api.airplanes.live/v2/reg/${registrations.join(',')}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn(`[airplanes.live reg] ${url} → ${res.status}`);
+    return [];
+  }
   return parseReadsbResponse(await res.json(), 'airplaneslive');
 }
 
