@@ -49,7 +49,28 @@ function MapFollower({ position }) {
   return null;
 }
 
-function StatCard({ icon, label, value }) {
+function DataRow({ icon, label, value, mono = false }) {
+  if (value == null || value === '--' || value === '') return null;
+  return (
+    <div
+      className="flex items-center justify-between py-3"
+      style={{ borderBottom: '1px solid var(--color-separator)' }}
+    >
+      <div className="flex items-center gap-2">
+        <MdIcon name={icon} style={{ fontSize: 16, color: 'var(--color-text-tertiary)' }} />
+        <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{label}</span>
+      </div>
+      <span
+        className={`text-sm font-semibold ${mono ? 'font-mono' : ''}`}
+        style={{ color: 'var(--color-text-primary)' }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, accent = false }) {
   return (
     <div
       style={{
@@ -60,7 +81,7 @@ function StatCard({ icon, label, value }) {
       }}
     >
       <div className="flex items-center gap-1.5 mb-1.5">
-        <MdIcon name={icon} style={{ fontSize: 14, color: 'var(--color-text-tertiary)' }} />
+        <MdIcon name={icon} style={{ fontSize: 14, color: accent ? 'var(--color-accent)' : 'var(--color-text-tertiary)' }} />
         <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: 'var(--color-text-tertiary)' }}>
           {label}
         </span>
@@ -80,12 +101,13 @@ export default function LiveTrack() {
   const liveData = useStore(s => s.liveData);
   const activeTrips = useStore(s => s.activeTrips);
   const trails = useStore(s => s.trails);
-  const settings = useStore(s => s.settings);
+  const flightHistory = useStore(s => s.flightHistory);
 
   const ac = aircraft.find(a => a.tailNumber === decodedTail);
   const activeTrip = activeTrips[decodedTail];
   const data = ac?.icao24 ? liveData[ac.icao24] : null;
   const trail = trails[decodedTail] || [];
+  const pastTrips = flightHistory.filter(t => t.tailNumber === decodedTail);
 
   const trailPositions = useMemo(() => {
     return trail.filter(p => p.lat && p.lng).map(p => [p.lat, p.lng]);
@@ -124,7 +146,9 @@ export default function LiveTrack() {
   }
 
   const altitude = data?.baroAltitude ? metersToFeet(data.baroAltitude) : 0;
+  const geoAlt = data?.geoAltitude ? metersToFeet(data.geoAltitude) : 0;
   const speed = data?.velocity ? msToKnots(data.velocity) : 0;
+  const groundSpeed = data?.groundSpeed ?? (data?.velocity ? msToKnots(data.velocity) : 0);
   const heading = animated.heading ?? data?.heading;
   const vRate = data?.verticalRate ? Math.round(data.verticalRate * 196.85) : 0; // m/s to fpm
   const elapsed = activeTrip ? formatDuration(Date.now() - activeTrip.startedAt) : '--';
@@ -141,7 +165,7 @@ export default function LiveTrack() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      {/* Header with sky gradient — matches AircraftDetail */}
+      {/* Header with sky gradient */}
       <div
         className="sky-gradient"
         style={{
@@ -202,7 +226,7 @@ export default function LiveTrack() {
                 )}
               </div>
               <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
-                {ac.tailNumber} · {ac.aircraftType || 'Aircraft'}
+                {ac.tailNumber} · {ac.aircraftType || data?.dbAircraftType || 'Aircraft'}
               </div>
             </div>
           </div>
@@ -226,9 +250,15 @@ export default function LiveTrack() {
               </div>
             )}
             <div style={chipStyle}>
-              <MdIcon name="route" style={{ fontSize: 12 }} />
-              {trailPositions.length} trail pts
+              <MdIcon name="tag" style={{ fontSize: 12 }} />
+              <span className="font-mono">{ac.icao24 || 'No ICAO'}</span>
             </div>
+            {data?._source && (
+              <div style={chipStyle}>
+                <MdIcon name="cloud" style={{ fontSize: 12 }} />
+                {data._source}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -255,7 +285,6 @@ export default function LiveTrack() {
               <TileLayer url={tileUrl} />
               {currentPosition && <MapFollower position={currentPosition} />}
 
-              {/* Trail */}
               {trailPositions.length > 1 && (
                 <Polyline
                   positions={trailPositions}
@@ -263,7 +292,6 @@ export default function LiveTrack() {
                 />
               )}
 
-              {/* Departure marker */}
               {activeTrip?.departureCoords && (
                 <Marker
                   position={[activeTrip.departureCoords.lat, activeTrip.departureCoords.lng]}
@@ -271,7 +299,6 @@ export default function LiveTrack() {
                 />
               )}
 
-              {/* Current position marker */}
               {currentPosition && (
                 <Marker
                   position={currentPosition}
@@ -307,7 +334,7 @@ export default function LiveTrack() {
           </div>
         </div>
 
-        {/* Flight Data section */}
+        {/* Primary stats - 2x2 grid */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-bold" style={{ color: 'var(--color-text-primary)' }}>
             Flight Data
@@ -319,15 +346,107 @@ export default function LiveTrack() {
           )}
         </div>
 
-        <div
-          className="grid gap-3"
-          style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}
-        >
-          <StatCard icon="height" label="Altitude" value={altitude ? `${altitude.toLocaleString()} ft` : '--'} />
-          <StatCard icon="speed" label="Speed" value={speed ? `${speed} kts` : '--'} />
-          <StatCard icon="explore" label="Heading" value={heading != null ? `${Math.round(heading)}° ${headingToCompass(heading)}` : '--'} />
-          <StatCard icon="trending_up" label="Vertical Speed" value={vRate ? `${vRate > 0 ? '+' : ''}${vRate} fpm` : '--'} />
+        <div className="grid gap-3 mb-5" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+          <StatCard icon="height" label="Baro Altitude" value={altitude ? `${altitude.toLocaleString()} ft` : '--'} />
+          <StatCard icon="speed" label="Ground Speed" value={groundSpeed ? `${Math.round(groundSpeed)} kts` : '--'} />
+          <StatCard icon="explore" label="Track" value={heading != null ? `${Math.round(heading)}° ${headingToCompass(heading)}` : '--'} />
+          <StatCard icon="trending_up" label="Vertical Rate" value={vRate ? `${vRate > 0 ? '+' : ''}${vRate} fpm` : '--'} accent={vRate > 0} />
         </div>
+
+        {/* Detailed flight information */}
+        <h2 className="text-base font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>
+          Details
+        </h2>
+        <div
+          className="mb-5"
+          style={{
+            background: 'var(--color-card)',
+            border: '1px solid var(--color-separator)',
+            borderRadius: 16,
+            padding: '4px 18px',
+          }}
+        >
+          <DataRow icon="height" label="Geometric Altitude" value={geoAlt ? `${geoAlt.toLocaleString()} ft` : null} mono />
+          <DataRow icon="speed" label="Ground Speed" value={groundSpeed ? `${Math.round(groundSpeed)} kts` : null} mono />
+          <DataRow icon="air" label="Indicated Airspeed" value={data?.indicatedAirspeed ? `${Math.round(data.indicatedAirspeed)} kts` : null} mono />
+          <DataRow icon="air" label="True Airspeed" value={data?.trueAirspeed ? `${Math.round(data.trueAirspeed)} kts` : null} mono />
+          <DataRow icon="speed" label="Mach" value={data?.mach ? `M ${data.mach.toFixed(3)}` : null} mono />
+          <DataRow icon="explore" label="Track (GPS)" value={heading != null ? `${Math.round(heading)}° ${headingToCompass(heading)}` : null} mono />
+          <DataRow icon="explore" label="Magnetic Heading" value={data?.magneticHeading != null ? `${Math.round(data.magneticHeading)}°` : null} mono />
+          <DataRow icon="trending_up" label="Vertical Rate" value={vRate ? `${vRate > 0 ? '+' : ''}${vRate.toLocaleString()} fpm` : null} mono />
+          <DataRow icon="flight" label="Selected Altitude" value={data?.navAltitude ? `${data.navAltitude.toLocaleString()} ft` : null} mono />
+          <DataRow icon="navigation" label="Selected Heading" value={data?.navHeading != null ? `${Math.round(data.navHeading)}°` : null} mono />
+          <DataRow icon="cell_tower" label="Squawk" value={data?.squawk || null} mono />
+          <DataRow icon="label" label="Callsign" value={data?.callsign || null} mono />
+          <DataRow icon="tag" label="ICAO24 Hex" value={ac.icao24 || null} mono />
+          <DataRow icon="flight_class" label="Aircraft Type" value={ac.aircraftType || data?.dbAircraftType || null} />
+          <DataRow icon="business" label="Operator" value={data?.operatorCode || null} />
+          <DataRow icon="warning" label="Emergency" value={data?.emergencyFlag && data.emergencyFlag !== 'none' ? data.emergencyFlag : null} />
+          <DataRow icon="location_on" label="Position" value={currentPosition ? `${currentPosition[0].toFixed(4)}°, ${currentPosition[1].toFixed(4)}°` : null} mono />
+          <DataRow icon="cloud" label="Data Source" value={data?._source || null} />
+          <DataRow icon="route" label="Trail Points" value={trailPositions.length > 0 ? `${trailPositions.length}` : null} />
+          <DataRow icon="timer" label="Flight Duration" value={elapsed !== '--' ? elapsed : null} />
+        </div>
+
+        {/* Previous flights section */}
+        {pastTrips.length > 0 && (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                Previous Flights
+              </h2>
+              <button
+                onClick={() => navigate(`/aircraft/${encodeURIComponent(decodedTail)}`)}
+                className="text-xs font-medium"
+                style={{ color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                View All
+              </button>
+            </div>
+            <div className="grid gap-3 mb-5">
+              {pastTrips.slice(0, 3).map(trip => {
+                const dep = trip.departureAirport || 'Unknown';
+                const arr = trip.arrivalAirport || 'Unknown';
+                const dur = trip.duration ? formatDuration(trip.duration) : '--';
+                return (
+                  <button
+                    key={trip.id}
+                    onClick={() => navigate(`/trip/${trip.id}`)}
+                    className="w-full text-left"
+                    style={{
+                      background: 'var(--color-card)',
+                      border: '1px solid var(--color-separator)',
+                      borderRadius: 14,
+                      padding: '14px 16px',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold font-mono" style={{ color: 'var(--color-text-primary)' }}>
+                          {dep}
+                        </span>
+                        <MdIcon name="arrow_forward" style={{ fontSize: 14, color: 'var(--color-text-tertiary)' }} />
+                        <span className="text-sm font-bold font-mono" style={{ color: 'var(--color-text-primary)' }}>
+                          {arr}
+                        </span>
+                      </div>
+                      <MdIcon name="chevron_right" style={{ fontSize: 18, color: 'var(--color-text-tertiary)' }} />
+                    </div>
+                    <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
+                      <span>{trip.startedAt ? new Date(trip.startedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}</span>
+                      <span>{dur}</span>
+                      {trip.maxAltitude > 0 && (
+                        <span>{metersToFeet(trip.maxAltitude).toLocaleString()} ft</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

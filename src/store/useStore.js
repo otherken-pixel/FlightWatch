@@ -54,14 +54,14 @@ const useStore = create((set, get) => ({
   // Live flight data keyed by ICAO24 hex
   liveData: {},
 
-  // Flight trail points keyed by tail number
-  trails: {},
+  // Flight trail points keyed by tail number (persisted so trails survive refresh)
+  trails: loadFromStorage('trails', {}),
 
   // Flight history log (trips with trail data)
   flightHistory: loadFromStorage('history', []),
 
-  // Active trips keyed by tail number (in-progress flights)
-  activeTrips: {},
+  // Active trips keyed by tail number (persisted so in-progress flights survive refresh)
+  activeTrips: loadFromStorage('activeTrips', {}),
 
   // Manual refresh callback set by the poller
   _refreshNow: null,
@@ -111,6 +111,10 @@ const useStore = create((set, get) => ({
         updates.flightHistory = data.flightHistory;
         saveToStorage('history', data.flightHistory);
       }
+      if (data.activeTrips && typeof data.activeTrips === 'object') {
+        updates.activeTrips = data.activeTrips;
+        saveToStorage('activeTrips', data.activeTrips);
+      }
       if (data.notifications) {
         updates.notifications = data.notifications;
         saveToStorage('notifications', data.notifications);
@@ -136,11 +140,12 @@ const useStore = create((set, get) => ({
 
   // Save all persistable data to Firestore (debounced for frequent changes)
   syncToCloud: () => {
-    const { currentUser, aircraft, flightHistory, notifications, apiKeys, settings } = get();
+    const { currentUser, aircraft, flightHistory, activeTrips, notifications, apiKeys, settings } = get();
     if (!currentUser) return;
     debouncedFirestoreSave(currentUser.uid, () => ({
       aircraft,
       flightHistory,
+      activeTrips,
       notifications,
       apiKeys,
       settings,
@@ -155,11 +160,12 @@ const useStore = create((set, get) => ({
 
   // Immediate save for critical changes (aircraft add/remove)
   syncToCloudNow: () => {
-    const { currentUser, aircraft, flightHistory, notifications, apiKeys, settings } = get();
+    const { currentUser, aircraft, flightHistory, activeTrips, notifications, apiKeys, settings } = get();
     if (!currentUser) return;
     immediateFirestoreSave(currentUser.uid, () => ({
       aircraft,
       flightHistory,
+      activeTrips,
       notifications,
       apiKeys,
       settings,
@@ -226,20 +232,22 @@ const useStore = create((set, get) => ({
   addTrailPoint: (tailNumber, point) => {
     const trails = { ...get().trails };
     const trail = trails[tailNumber] || [];
-    const thirtyMinAgo = Date.now() - 30 * 60 * 1000;
-    trails[tailNumber] = [...trail.filter(p => p.timestamp > thirtyMinAgo), {
+    const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+    trails[tailNumber] = [...trail.filter(p => p.timestamp > twoHoursAgo), {
       lat: point.lat,
       lng: point.lng,
       alt: point.alt,
       timestamp: Date.now(),
     }];
     set({ trails });
+    saveToStorage('trails', trails);
   },
 
   clearTrail: (tailNumber) => {
     const trails = { ...get().trails };
     delete trails[tailNumber];
     set({ trails });
+    saveToStorage('trails', trails);
   },
 
   addToast: (toast) => {
@@ -272,6 +280,7 @@ const useStore = create((set, get) => ({
       lastState: startData.state || null,
     };
     set({ activeTrips });
+    saveToStorage('activeTrips', activeTrips);
   },
 
   // Add a point to the active trip trail
@@ -283,6 +292,7 @@ const useStore = create((set, get) => ({
     trip.lastState = point.state || trip.lastState;
     activeTrips[tailNumber] = { ...trip };
     set({ activeTrips });
+    saveToStorage('activeTrips', activeTrips);
   },
 
   // Complete a trip and save to history
@@ -304,6 +314,7 @@ const useStore = create((set, get) => ({
     delete activeTrips[tailNumber];
     const history = [completedTrip, ...get().flightHistory].slice(0, 200);
     saveToStorage('history', history);
+    saveToStorage('activeTrips', activeTrips);
     set({ flightHistory: history, activeTrips });
     get().syncToCloudNow();
   },

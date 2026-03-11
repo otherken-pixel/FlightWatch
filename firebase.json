@@ -21,11 +21,7 @@
         "source": "/api/adsblol/**",
         "function": "adsbLol"
       },
-      {
-        "source": "/api/airplaneslive/**",
-        "function": "airplanesLive"
-      },
-      {
+{
         "source": "/api/weather/**",
         "function": "weather"
       },

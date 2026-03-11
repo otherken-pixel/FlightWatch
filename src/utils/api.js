@@ -1,6 +1,5 @@
 // ADS-B data fetching utilities
-// Calls adsb.lol and airplanes.live directly (both support CORS, no keys needed).
-// OpenSky is called via Firebase Function proxy (requires CORS proxy).
+// All external API calls go through Firebase Functions proxies to avoid CORS issues.
 
 /**
  * Fetch multiple aircraft states from OpenSky (via proxy)
@@ -8,7 +7,7 @@
 export async function fetchOpenSkyMultiple(icao24List) {
   if (icao24List.length === 0) return [];
   const icaoParam = icao24List.join(',');
-  const url = `/api/opensky/states/all?icao24=${icaoParam}`;
+  const url = `/api/opensky?icao24=${icaoParam}`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(`OpenSky API error: ${res.status}`);
@@ -19,6 +18,7 @@ export async function fetchOpenSkyMultiple(icao24List) {
   return data.states.map(s => ({
     icao24: s[0],
     callsign: s[1]?.trim() || '',
+    registration: '',
     originCountry: s[2],
     timePosition: s[3],
     lastContact: s[4],
@@ -33,6 +33,7 @@ export async function fetchOpenSkyMultiple(icao24List) {
     squawk: s[14],
     spi: s[15],
     positionSource: s[16],
+    _source: 'opensky',
   }));
 }
 
@@ -41,7 +42,7 @@ export async function fetchOpenSkyMultiple(icao24List) {
  */
 export async function fetchWeather(lat, lon, apiKey) {
   if (!apiKey) return null;
-  const url = `/api/weather/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
+  const url = `/api/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`;
   const res = await fetch(url);
   if (!res.ok) return null;
   return res.json();
@@ -89,14 +90,12 @@ export function metersToFeet(m) {
 
 /**
  * Staleness threshold: position older than 5 minutes is stale.
- * GA aircraft in sparse-coverage areas often have 60-120s gaps between
- * position reports, so 60s was too aggressive and caused missed tracks.
  */
 const READSB_STALE_THRESHOLD_S = 300;
 
 /**
  * Normalize a single readsb-format aircraft record to our shared state shape.
- * Works with adsb.lol, airplanes.live, and adsb.fi (all use the same format).
+ * Works with adsb.lol (readsb v2 format).
  */
 function normalizeReadsbRecord(a, source) {
   const seenPosSecs = a.seen_pos ?? a.seen ?? 0;
@@ -121,6 +120,21 @@ function normalizeReadsbRecord(a, source) {
     squawk: a.squawk || null,
     spi: false,
     positionSource: 1,
+    // Extended fields from readsb for detailed flight tracking
+    groundSpeed: a.gs ?? null, // knots (raw)
+    indicatedAirspeed: a.ias ?? null, // knots
+    trueAirspeed: a.tas ?? null, // knots
+    mach: a.mach ?? null,
+    magneticHeading: a.mag_heading ?? null,
+    trueHeading: a.true_heading ?? null,
+    rollAngle: a.roll ?? null,
+    navAltitude: a.nav_altitude_mcp ?? null, // feet (selected altitude)
+    navHeading: a.nav_heading ?? null,
+    navModes: a.nav_modes ?? null,
+    emergencyFlag: a.emergency ?? null,
+    dbAircraftType: a.t ?? null,
+    operatorCode: a.ownOp ?? null,
+    category: a.category ?? null,
     _source: source,
     _stale: seenPosSecs > READSB_STALE_THRESHOLD_S,
   };
@@ -136,10 +150,10 @@ function parseReadsbResponse(data, source) {
     .filter(r => !r._stale && r.latitude != null && r.longitude != null);
 }
 
-// ── adsb.lol (direct CORS calls) ────────────────────────────────────
+// ── adsb.lol (via Firebase proxy to avoid CORS) ────────────────────
 
 export async function fetchAdsbLol(icao24) {
-  const url = `https://api.adsb.lol/v2/icao/${icao24}`;
+  const url = `/api/adsblol?type=icao&ids=${icao24}`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const records = parseReadsbResponse(await res.json(), 'adsblol');
@@ -148,10 +162,10 @@ export async function fetchAdsbLol(icao24) {
 
 export async function fetchAdsbLolMultiple(icao24List) {
   if (icao24List.length === 0) return [];
-  const url = `https://api.adsb.lol/v2/icao/${icao24List.join(',')}`;
+  const url = `/api/adsblol?type=icao&ids=${icao24List.join(',')}`;
   const res = await fetch(url);
   if (!res.ok) {
-    console.warn(`[adsb.lol] ${url} → ${res.status}`);
+    console.warn(`[adsb.lol] proxy returned ${res.status}`);
     return [];
   }
   return parseReadsbResponse(await res.json(), 'adsblol');
@@ -159,10 +173,10 @@ export async function fetchAdsbLolMultiple(icao24List) {
 
 export async function fetchAdsbLolByReg(registrations) {
   if (registrations.length === 0) return [];
-  const url = `https://api.adsb.lol/v2/reg/${registrations.join(',')}`;
+  const url = `/api/adsblol?type=reg&ids=${registrations.join(',')}`;
   const res = await fetch(url);
   if (!res.ok) {
-    console.warn(`[adsb.lol reg] ${url} → ${res.status}`);
+    console.warn(`[adsb.lol reg] proxy returned ${res.status}`);
     return [];
   }
   return parseReadsbResponse(await res.json(), 'adsblol');
