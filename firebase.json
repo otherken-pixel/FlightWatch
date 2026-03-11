@@ -15,27 +15,45 @@
     "rewrites": [
       {
         "source": "/api/opensky",
-        "function": "opensky"
+        "function": {
+          "functionId": "opensky",
+          "region": "us-central1"
+        }
       },
       {
         "source": "/api/opensky/**",
-        "function": "opensky"
+        "function": {
+          "functionId": "opensky",
+          "region": "us-central1"
+        }
       },
       {
         "source": "/api/adsblol",
-        "function": "adsbLol"
+        "function": {
+          "functionId": "adsbLol",
+          "region": "us-central1"
+        }
       },
       {
         "source": "/api/adsblol/**",
-        "function": "adsbLol"
+        "function": {
+          "functionId": "adsbLol",
+          "region": "us-central1"
+        }
       },
       {
         "source": "/api/weather",
-        "function": "weather"
+        "function": {
+          "functionId": "weather",
+          "region": "us-central1"
+        }
       },
       {
         "source": "/api/weather/**",
-        "function": "weather"
+        "function": {
+          "functionId": "weather",
+          "region": "us-central1"
+        }
       },
       {
         "source": "**",
