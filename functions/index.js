@@ -36,8 +36,8 @@ exports.opensky = onRequest({ region: "us-central1" }, async (req, res) => {
  * Adds required User-Agent header to avoid being filtered.
  */
 exports.adsbLol = onRequest({ region: "us-central1" }, async (req, res) => {
-  // Forward the path after /api/adsblol directly to adsb.lol
-  const upstreamPath = req.path; // e.g. /v2/icao/a3957b/
+  // Strip the hosting rewrite prefix — req.path includes the full original path
+  const upstreamPath = req.path.replace(/^\/api\/adsblol/, '');
   const url = `https://api.adsb.lol${upstreamPath}`;
 
   try {
@@ -68,7 +68,8 @@ exports.adsbLol = onRequest({ region: "us-central1" }, async (req, res) => {
  * providing broader coverage for GA aircraft.
  */
 exports.airplanesLive = onRequest({ region: "us-central1" }, async (req, res) => {
-  const upstreamPath = req.path; // e.g. /v2/hex/a3957b
+  // Strip the hosting rewrite prefix — req.path includes the full original path
+  const upstreamPath = req.path.replace(/^\/api\/airplaneslive/, '');
   const url = `https://api.airplanes.live${upstreamPath}`;
 
   try {
