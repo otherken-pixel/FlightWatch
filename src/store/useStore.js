@@ -63,6 +63,11 @@ const useStore = create((set, get) => ({
   // Active trips keyed by tail number (in-progress flights)
   activeTrips: {},
 
+  // Manual refresh callback set by the poller
+  _refreshNow: null,
+  setRefreshNow: (fn) => set({ _refreshNow: fn }),
+  refreshNow: () => { const fn = get()._refreshNow; if (fn) fn(); },
+
   // Notification settings
   notifications: loadFromStorage('notifications', {
     takeoff: true,

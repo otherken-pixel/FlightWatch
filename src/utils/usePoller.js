@@ -17,6 +17,7 @@ import { findNearestAirport } from './airports';
  */
 export function usePoller() {
   const intervalRef = useRef(null);
+  const pollRef = useRef(null);
   const maxSpeedRef = useRef({});
   const settings = useStore(s => s.settings);
 
@@ -208,6 +209,13 @@ export function usePoller() {
       }
     };
 
+    pollRef.current = poll;
+    useStore.getState().setRefreshNow(() => {
+      if (pollRef.current) pollRef.current();
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(() => pollRef.current?.(), settings.pollInterval);
+    });
+
     // Initial poll
     poll();
 
@@ -218,4 +226,5 @@ export function usePoller() {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [settings.pollInterval]);
+
 }

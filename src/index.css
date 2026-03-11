@@ -316,6 +316,10 @@ button:active { transform: scale(0.97); }
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.5); opacity: 0.5; }
 }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 .toast-enter { animation: slideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1); }
 .toast-exit { animation: slideDown 0.25s ease-in forwards; }
