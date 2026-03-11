@@ -1,23 +1,44 @@
 const { onRequest } = require("firebase-functions/v2/https");
 
 /**
+ * Extract the upstream path from the request.
+ * Firebase Hosting rewrites may deliver the original path in req.path,
+ * req.originalUrl, or req.url depending on the runtime version.
+ * We try all three and strip the known prefix.
+ */
+function extractUpstreamPath(req, prefix) {
+  // Try multiple sources for the original path
+  const candidates = [req.originalUrl, req.url, req.path];
+  for (const raw of candidates) {
+    if (raw && raw.startsWith(prefix)) {
+      const stripped = raw.replace(prefix, '');
+      // Remove any query string (originalUrl may include it)
+      return stripped.split('?')[0];
+    }
+  }
+  // If none matched, the path might already be stripped by the hosting rewrite
+  // In that case, req.path is the upstream portion
+  const fallback = (req.path || '/').split('?')[0];
+  console.log(`[extractUpstreamPath] No prefix match for '${prefix}', using req.path: '${fallback}'`);
+  return fallback;
+}
+
+/**
  * Proxy requests to OpenSky Network API to avoid CORS issues in production.
  * Handles: /api/opensky/states/all?icao24=...
  */
 exports.opensky = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
-  // Forward query params to OpenSky
   const params = new URLSearchParams(req.query);
   const url = `https://opensky-network.org/api/states/all?${params.toString()}`;
-  console.log('[opensky] path:', req.path, '| url:', url);
+  console.log('[opensky] req.path:', req.path, '| req.originalUrl:', req.originalUrl, '| url:', url);
 
   try {
     const response = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-      },
+      headers: { "Accept": "application/json" },
     });
 
     if (!response.ok) {
+      console.warn('[opensky] upstream returned', response.status);
       res.status(response.status).json({ error: `OpenSky API error: ${response.status}` });
       return;
     }
@@ -33,24 +54,24 @@ exports.opensky = onRequest({ region: "us-central1", cors: true }, async (req, r
 
 /**
  * Proxy requests to adsb.lol (no API key required).
- * Handles: /api/adsblol/v2/icao/{icao24} and /api/adsblol/v2/icao/{hex1,hex2,...}
- * Adds required User-Agent header to avoid being filtered.
+ * Handles: /api/adsblol/v2/icao/{icao24} and /api/adsblol/v2/reg/{reg}
  */
 exports.adsbLol = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
-  // Strip the hosting rewrite prefix if present
-  const upstreamPath = req.path.replace(/^\/api\/adsblol/, '');
+  const upstreamPath = extractUpstreamPath(req, '/api/adsblol');
   const url = `https://api.adsb.lol${upstreamPath}`;
-  console.log('[adsbLol] req.path:', req.path, '| upstream:', url);
+  console.log('[adsbLol] req.path:', req.path, '| req.originalUrl:', req.originalUrl, '| upstream:', url);
 
   try {
     const response = await fetch(url, {
       headers: {
         "Accept": "application/json",
-        "User-Agent": "FlightWatch-App-Internal",
+        "User-Agent": "FlightWatch/1.0",
       },
     });
 
     if (!response.ok) {
+      const body = await response.text();
+      console.warn('[adsbLol] upstream returned', response.status, body.substring(0, 200));
       res.status(response.status).json({ error: `adsb.lol API error: ${response.status}` });
       return;
     }
@@ -65,25 +86,25 @@ exports.adsbLol = onRequest({ region: "us-central1", cors: true }, async (req, r
 });
 
 /**
- * Proxy requests to airplanes.live (additional ADS-B source, no API key required).
- * Same readsb v2 API format as adsb.lol but with a different feeder network,
- * providing broader coverage for GA aircraft.
+ * Proxy requests to airplanes.live (additional ADS-B source).
+ * Same readsb v2 API format as adsb.lol.
  */
 exports.airplanesLive = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
-  // Strip the hosting rewrite prefix if present
-  const upstreamPath = req.path.replace(/^\/api\/airplaneslive/, '');
+  const upstreamPath = extractUpstreamPath(req, '/api/airplaneslive');
   const url = `https://api.airplanes.live${upstreamPath}`;
-  console.log('[airplanesLive] req.path:', req.path, '| upstream:', url);
+  console.log('[airplanesLive] req.path:', req.path, '| req.originalUrl:', req.originalUrl, '| upstream:', url);
 
   try {
     const response = await fetch(url, {
       headers: {
         "Accept": "application/json",
-        "User-Agent": "FlightWatch-App-Internal",
+        "User-Agent": "FlightWatch/1.0",
       },
     });
 
     if (!response.ok) {
+      const body = await response.text();
+      console.warn('[airplanesLive] upstream returned', response.status, body.substring(0, 200));
       res.status(response.status).json({ error: `airplanes.live API error: ${response.status}` });
       return;
     }
@@ -99,7 +120,6 @@ exports.airplanesLive = onRequest({ region: "us-central1", cors: true }, async (
 
 /**
  * Proxy requests to OpenWeatherMap API.
- * Handles: /api/weather/weather?lat=...&lon=...&appid=...&units=...
  */
 exports.weather = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
   const params = new URLSearchParams(req.query);
@@ -107,9 +127,7 @@ exports.weather = onRequest({ region: "us-central1", cors: true }, async (req, r
 
   try {
     const response = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-      },
+      headers: { "Accept": "application/json" },
     });
 
     if (!response.ok) {

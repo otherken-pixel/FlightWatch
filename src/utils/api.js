@@ -184,15 +184,23 @@ export async function fetchAdsbLol(icao24) {
 
 export async function fetchAdsbLolMultiple(icao24List) {
   if (icao24List.length === 0) return [];
-  const res = await fetch(`/api/adsblol/v2/icao/${icao24List.join(',')}/`);
-  if (!res.ok) return [];
+  const url = `/api/adsblol/v2/icao/${icao24List.join(',')}/`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn(`[adsb.lol] ${url} → ${res.status}`);
+    return [];
+  }
   return parseReadsbResponse(await res.json(), 'adsblol');
 }
 
 export async function fetchAdsbLolByReg(registrations) {
   if (registrations.length === 0) return [];
-  const res = await fetch(`/api/adsblol/v2/reg/${registrations.join(',')}/`);
-  if (!res.ok) return [];
+  const url = `/api/adsblol/v2/reg/${registrations.join(',')}/`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn(`[adsb.lol reg] ${url} → ${res.status}`);
+    return [];
+  }
   return parseReadsbResponse(await res.json(), 'adsblol');
 }
 
@@ -200,15 +208,23 @@ export async function fetchAdsbLolByReg(registrations) {
 
 export async function fetchAirplanesLiveMultiple(icao24List) {
   if (icao24List.length === 0) return [];
-  const res = await fetch(`/api/airplaneslive/v2/hex/${icao24List.join(',')}`);
-  if (!res.ok) return [];
+  const url = `/api/airplaneslive/v2/hex/${icao24List.join(',')}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn(`[airplanes.live] ${url} → ${res.status}`);
+    return [];
+  }
   return parseReadsbResponse(await res.json(), 'airplaneslive');
 }
 
 export async function fetchAirplanesLiveByReg(registrations) {
   if (registrations.length === 0) return [];
-  const res = await fetch(`/api/airplaneslive/v2/reg/${registrations.join(',')}`);
-  if (!res.ok) return [];
+  const url = `/api/airplaneslive/v2/reg/${registrations.join(',')}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn(`[airplanes.live reg] ${url} → ${res.status}`);
+    return [];
+  }
   return parseReadsbResponse(await res.json(), 'airplaneslive');
 }
 
