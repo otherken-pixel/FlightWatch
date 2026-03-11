@@ -205,7 +205,16 @@ const useStore = create((set, get) => ({
   setSelectedTail: (tail) => set({ selectedTail: tail }),
 
   updateLiveData: (icao24, data) => {
-    const liveData = { ...get().liveData, [icao24]: { ...data, updatedAt: Date.now() } };
+    const liveData = {
+      ...get().liveData,
+      [icao24]: {
+        ...data,
+        last_velocity: data.velocity ?? null,
+        last_track: data.heading ?? null,
+        last_updated: new Date().toISOString(),
+        updatedAt: Date.now(),
+      },
+    };
     set({ liveData });
   },
 
