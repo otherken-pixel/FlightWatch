@@ -9,7 +9,12 @@ export async function fetchOpenSkyMultiple(icao24List) {
   const icaoParam = icao24List.join(',');
   const url = `/api/opensky?icao24=${icaoParam}`;
 
-  const res = await fetch(url);
+  let res;
+  try {
+    res = await fetch(url);
+  } catch (err) {
+    throw new Error(`OpenSky network error: ${err.message}`);
+  }
   if (!res.ok) throw new Error(`OpenSky API error: ${res.status}`);
 
   const data = await res.json();
@@ -163,23 +168,33 @@ export async function fetchAdsbLol(icao24) {
 export async function fetchAdsbLolMultiple(icao24List) {
   if (icao24List.length === 0) return [];
   const url = `/api/adsblol?type=icao&ids=${icao24List.join(',')}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    console.warn(`[adsb.lol] proxy returned ${res.status}`);
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.warn(`[adsb.lol] proxy returned ${res.status}`);
+      return [];
+    }
+    return parseReadsbResponse(await res.json(), 'adsblol');
+  } catch (err) {
+    console.warn(`[adsb.lol] fetch failed: ${err.message}`);
     return [];
   }
-  return parseReadsbResponse(await res.json(), 'adsblol');
 }
 
 export async function fetchAdsbLolByReg(registrations) {
   if (registrations.length === 0) return [];
   const url = `/api/adsblol?type=reg&ids=${registrations.join(',')}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    console.warn(`[adsb.lol reg] proxy returned ${res.status}`);
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.warn(`[adsb.lol reg] proxy returned ${res.status}`);
+      return [];
+    }
+    return parseReadsbResponse(await res.json(), 'adsblol');
+  } catch (err) {
+    console.warn(`[adsb.lol reg] fetch failed: ${err.message}`);
     return [];
   }
-  return parseReadsbResponse(await res.json(), 'adsblol');
 }
 
 /**

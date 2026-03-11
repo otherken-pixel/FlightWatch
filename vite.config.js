@@ -77,20 +77,21 @@ export default defineConfig({
       '/api/opensky': {
         target: 'https://opensky-network.org',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/opensky/, '/api'),
+        rewrite: (path) => path.replace(/^\/api\/opensky/, '/api/states/all'),
       },
       '/api/adsblol': {
         target: 'https://api.adsb.lol',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/adsblol/, ''),
-        headers: {
-          'User-Agent': 'FlightWatch-App-Internal',
+        configure: (proxy) => {
+          // Translate ?type=icao&ids=abc123 → /v2/icao/abc123 (adsb.lol path format)
+          proxy.on('proxyReq', (proxyReq, req) => {
+            const qs = req.url.split('?')[1] || '';
+            const params = new URLSearchParams(qs);
+            const type = params.get('type') || 'icao';
+            const ids = params.get('ids') || '';
+            proxyReq.path = `/v2/${type}/${ids}`;
+          });
         },
-      },
-      '/api/airplaneslive': {
-        target: 'https://api.airplanes.live',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/airplaneslive/, ''),
         headers: {
           'User-Agent': 'FlightWatch-App-Internal',
         },
