@@ -14,14 +14,26 @@
     ],
     "rewrites": [
       {
+        "source": "/api/opensky",
+        "function": "opensky"
+      },
+      {
         "source": "/api/opensky/**",
         "function": "opensky"
+      },
+      {
+        "source": "/api/adsblol",
+        "function": "adsbLol"
       },
       {
         "source": "/api/adsblol/**",
         "function": "adsbLol"
       },
-{
+      {
+        "source": "/api/weather",
+        "function": "weather"
+      },
+      {
         "source": "/api/weather/**",
         "function": "weather"
       },
