@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store/useStore';
-import { fetchOpenSkyMultiple, fetchAdsbLolMultiple } from './api';
+import { fetchOpenSkyMultiple, fetchAdsbLolMultiple, fetchAdsbLolByReg } from './api';
 import { determineFlightState, getStateTransitionEvent, isSignalLost } from './flightStateMachine';
 import { sendNotification, playNotificationSound } from './notifications';
 import { findNearestAirport } from './airports';
@@ -52,6 +52,27 @@ export function usePoller() {
         const statesByIcao = new Map();
         for (const s of openSkyStates) statesByIcao.set(s.icao24, s);
         for (const s of adsbLolStates) statesByIcao.set(s.icao24, s); // overwrites OpenSky
+
+        // Fallback: for aircraft still missing, try adsb.lol by registration.
+        // Catches cases where hex conversion doesn't match the transponder.
+        const missingAircraft = tracked.filter(a => !statesByIcao.has(a.icao24));
+        if (missingAircraft.length > 0) {
+          const tailNumbers = missingAircraft.map(a => a.tailNumber);
+          try {
+            const regStates = await fetchAdsbLolByReg(tailNumbers);
+            for (const s of regStates) {
+              // Map reg results back using the tracked aircraft's icao24
+              const match = missingAircraft.find(
+                a => a.tailNumber.toUpperCase() === (s.callsign || '').toUpperCase()
+                  || s.icao24 === a.icao24
+              );
+              if (match) statesByIcao.set(match.icao24, { ...s, icao24: match.icao24 });
+            }
+          } catch (err) {
+            console.warn('adsb.lol reg fallback failed:', err.message);
+          }
+        }
+
         const states = [...statesByIcao.values()];
 
         for (const ac of tracked) {
