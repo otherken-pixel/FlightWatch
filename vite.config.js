@@ -79,12 +79,12 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/opensky/, '/api'),
       },
-      '/api/adsbx': {
-        target: 'https://adsbexchange-com1.p.rapidapi.com',
+      '/api/adsblol': {
+        target: 'https://api.adsb.lol',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/adsbx/, ''),
+        rewrite: (path) => path.replace(/^\/api\/adsblol/, ''),
         headers: {
-          'X-RapidAPI-Host': 'adsbexchange-com1.p.rapidapi.com',
+          'User-Agent': 'FlightWatch-App-Internal',
         },
       },
       '/api/weather': {

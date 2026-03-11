@@ -22,8 +22,8 @@
         "function": "opensky"
       },
       {
-        "source": "/api/adsbx/**",
-        "function": "adsbx"
+        "source": "/api/adsblol/**",
+        "function": "adsbLol"
       },
       {
         "source": "/api/weather/**",
