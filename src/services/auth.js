@@ -8,7 +8,14 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider, firebaseConfigured } from './firebase.js';
 
+function requireAuth() {
+  if (!firebaseConfigured || !auth) {
+    throw { code: 'auth/not-configured', message: 'Firebase is not configured. Continue without an account or set up Firebase.' };
+  }
+}
+
 export async function signInWithGoogle() {
+  requireAuth();
   try {
     return await signInWithPopup(auth, googleProvider);
   } catch (err) {
@@ -25,14 +32,17 @@ export async function signInWithGoogle() {
 }
 
 export function signInWithEmail(email, password) {
+  requireAuth();
   return signInWithEmailAndPassword(auth, email, password);
 }
 
 export function signUpWithEmail(email, password) {
+  requireAuth();
   return createUserWithEmailAndPassword(auth, email, password);
 }
 
 export function logOut() {
+  if (!auth) return Promise.resolve();
   return signOut(auth);
 }
 
@@ -61,6 +71,7 @@ export function friendlyError(error) {
     'auth/too-many-requests': 'Too many attempts. Please wait a moment.',
     'auth/invalid-credential': 'Invalid credentials. Please check your email and password.',
     'auth/invalid-login-credentials': 'Invalid email or password. Please try again.',
+    'auth/not-configured': 'Firebase is not configured. Continue without an account or set up Firebase.',
   };
   return map[error.code] || error.message || 'An unexpected error occurred.';
 }
