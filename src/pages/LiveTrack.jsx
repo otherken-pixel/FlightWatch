@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Polyline, Marker, useMap } from 'react-leaflet
 import L from 'leaflet';
 import useStore from '../store/useStore';
 import { msToKnots, metersToFeet, headingToCompass, formatDuration } from '../utils/api';
+import { useAnimatedPosition } from '../hooks/useAnimatedPosition';
 
 function MdIcon({ name, style }) {
   return <span className="material-symbols-rounded" style={style}>{name}</span>;
@@ -91,11 +92,10 @@ export default function LiveTrack() {
     return trail.filter(p => p.lat && p.lng).map(p => [p.lat, p.lng]);
   }, [trail]);
 
-  const currentPosition = useMemo(() => {
-    if (data?.latitude && data?.longitude) return [data.latitude, data.longitude];
-    if (trailPositions.length > 0) return trailPositions[trailPositions.length - 1];
-    return null;
-  }, [data, trailPositions]);
+  // Smoothly animated position via requestAnimationFrame
+  const animated = useAnimatedPosition(data);
+  const currentPosition = animated.position
+    || (trailPositions.length > 0 ? trailPositions[trailPositions.length - 1] : null);
 
   const isDark = settings.mapStyle === 'dark';
   const tileUrl = isDark
@@ -123,10 +123,11 @@ export default function LiveTrack() {
 
   const altitude = data?.baroAltitude ? metersToFeet(data.baroAltitude) : 0;
   const speed = data?.velocity ? msToKnots(data.velocity) : 0;
-  const heading = data?.heading;
+  const heading = animated.heading ?? data?.heading;
   const vRate = data?.verticalRate ? Math.round(data.verticalRate * 196.85) : 0; // m/s to fpm
   const elapsed = activeTrip ? formatDuration(Date.now() - activeTrip.startedAt) : '--';
   const isAirborne = ac.status === 'airborne';
+  const isStale = animated.stale;
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -148,8 +149,13 @@ export default function LiveTrack() {
             className="glass flex items-center gap-2 px-3 py-2"
             style={{ borderRadius: 14 }}
           >
-            <div className="pulse-dot" style={{ width: 8, height: 8, borderRadius: 99, background: '#34C759' }} />
-            <span className="text-xs font-bold" style={{ color: '#34C759' }}>LIVE</span>
+            <div className="pulse-dot" style={{
+              width: 8, height: 8, borderRadius: 99,
+              background: isStale ? '#FF9500' : '#34C759',
+            }} />
+            <span className="text-xs font-bold" style={{ color: isStale ? '#FF9500' : '#34C759' }}>
+              {isStale ? 'STALE' : 'LIVE'}
+            </span>
           </div>
         )}
       </div>

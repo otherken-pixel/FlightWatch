@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import useStore from '../store/useStore';
-import { metersToFeet, msToKnots } from '../utils/api';
+import { useAnimatedPosition } from '../hooks/useAnimatedPosition';
 
 // Create a rotatable plane icon
 function createPlaneIcon(heading = 0, color = '#007AFF') {
@@ -31,6 +31,40 @@ function MapController({ selectedPosition }) {
   }, [selectedPosition?.[0], selectedPosition?.[1]]);
 
   return null;
+}
+
+/**
+ * Single animated aircraft marker — isolates the rAF hook per aircraft
+ * so each one re-renders independently.
+ */
+function AnimatedAircraftMarker({ ac, trail, onSelect }) {
+  const data = useStore(s => s.liveData[ac.icao24]);
+  const { position, heading } = useAnimatedPosition(data);
+
+  if (!position) return null;
+
+  const trailPositions = (trail || []).map(p => [p.lat, p.lng]);
+
+  return (
+    <>
+      {trailPositions.length > 1 && (
+        <Polyline
+          positions={trailPositions}
+          pathOptions={{
+            color: ac.color,
+            weight: 2,
+            opacity: 0.6,
+            dashArray: '5, 10',
+          }}
+        />
+      )}
+      <Marker
+        position={position}
+        icon={createPlaneIcon(heading, ac.color)}
+        eventHandlers={{ click: () => onSelect(ac.tailNumber) }}
+      />
+    </>
+  );
 }
 
 export default function FlightMap() {
@@ -69,40 +103,14 @@ export default function FlightMap() {
       <TileLayer url={tileUrl} attribution={attribution} />
       <MapController selectedPosition={selectedPosition} />
 
-      {aircraft.map(ac => {
-        const data = liveData[ac.icao24];
-        if (!data?.latitude || !data?.longitude) return null;
-
-        const position = [data.latitude, data.longitude];
-        const trail = trails[ac.tailNumber] || [];
-        const trailPositions = trail.map(p => [p.lat, p.lng]);
-
-        return (
-          <div key={ac.id}>
-            {/* Flight trail */}
-            {trailPositions.length > 1 && (
-              <Polyline
-                positions={trailPositions}
-                pathOptions={{
-                  color: ac.color,
-                  weight: 2,
-                  opacity: 0.6,
-                  dashArray: '5, 10',
-                }}
-              />
-            )}
-
-            {/* Aircraft marker */}
-            <Marker
-              position={position}
-              icon={createPlaneIcon(data.heading, ac.color)}
-              eventHandlers={{
-                click: () => setSelectedTail(ac.tailNumber),
-              }}
-            />
-          </div>
-        );
-      })}
+      {aircraft.map(ac => (
+        <AnimatedAircraftMarker
+          key={ac.id}
+          ac={ac}
+          trail={trails[ac.tailNumber]}
+          onSelect={setSelectedTail}
+        />
+      ))}
     </MapContainer>
   );
 }
