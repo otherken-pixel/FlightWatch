@@ -123,6 +123,44 @@ export function metersToFeet(m) {
 }
 
 /**
+ * Fetch aircraft state from ADS-B Exchange (RapidAPI) by ICAO24 hex code.
+ * Returns data in the same shape as fetchOpenSky for easy interop.
+ */
+export async function fetchAdsbExchange(icao24, apiKey) {
+  if (!apiKey) return null;
+  const url = `/api/adsbx/v2/icao/${icao24}/?apiKey=${encodeURIComponent(apiKey)}`;
+
+  const res = await fetch(url);
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  if (!data.ac || data.ac.length === 0) return null;
+
+  // Normalize ADS-B Exchange format to match our OpenSky shape
+  return data.ac.map(a => ({
+    icao24: (a.hex || a.icao || icao24).toLowerCase(),
+    callsign: (a.flight || a.call || '').trim(),
+    originCountry: '',
+    timePosition: a.seen != null ? Math.floor(Date.now() / 1000) - a.seen : null,
+    lastContact: a.seen != null ? Math.floor(Date.now() / 1000) - a.seen : null,
+    longitude: a.lon != null ? a.lon : null,
+    latitude: a.lat != null ? a.lat : null,
+    baroAltitude: a.alt_baro != null && a.alt_baro !== 'ground'
+      ? a.alt_baro * 0.3048   // ADSBx reports feet, convert to meters
+      : null,
+    onGround: a.alt_baro === 'ground' || (a.ground === true),
+    velocity: a.gs != null ? a.gs * 0.514444 : null, // knots to m/s
+    heading: a.track != null ? a.track : null,
+    verticalRate: a.baro_rate != null ? a.baro_rate * 0.00508 : null, // ft/min to m/s
+    geoAltitude: a.alt_geom != null ? a.alt_geom * 0.3048 : null,
+    squawk: a.squawk || null,
+    spi: false,
+    positionSource: 1,
+    _source: 'adsbx',
+  }));
+}
+
+/**
  * Convert heading degrees to compass direction
  */
 export function headingToCompass(deg) {

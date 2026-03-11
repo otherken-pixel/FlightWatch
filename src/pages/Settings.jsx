@@ -215,11 +215,11 @@ export default function Settings() {
             label="ADS-B Exchange API Key (optional)"
             value={apiKeys.adsbExchange}
             onChange={v => updateApiKeys({ adsbExchange: v })}
-            placeholder="For enhanced tracking"
+            placeholder="RapidAPI key — better GA coverage"
           />
         </GroupedSection>
         <p className="text-[12px] mt-1.5 px-4" style={{ color: 'var(--color-text-tertiary)' }}>
-          Keys are stored locally and never sent to third-party servers.
+          ADS-B Exchange provides better coverage for general aviation when OpenSky has gaps. Get a free key at rapidapi.com. Keys are stored locally.
         </p>
 
         {/* ── Display ── */}
