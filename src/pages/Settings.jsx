@@ -211,15 +211,9 @@ export default function Settings() {
             onChange={v => updateApiKeys({ openweather: v })}
             placeholder="Get free key at openweathermap.org"
           />
-          <InputRow
-            label="ADS-B Exchange API Key (optional)"
-            value={apiKeys.adsbExchange}
-            onChange={v => updateApiKeys({ adsbExchange: v })}
-            placeholder="RapidAPI key — better GA coverage"
-          />
         </GroupedSection>
         <p className="text-[12px] mt-1.5 px-4" style={{ color: 'var(--color-text-tertiary)' }}>
-          ADS-B Exchange provides better coverage for general aviation when OpenSky has gaps. Get a free key at rapidapi.com. Keys are stored locally.
+          Aircraft tracking uses OpenSky + adsb.lol (no key needed). Weather requires an OpenWeatherMap key. Keys are stored locally.
         </p>
 
         {/* ── Display ── */}
