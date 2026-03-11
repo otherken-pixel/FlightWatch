@@ -35,19 +35,24 @@ export function usePoller() {
       try {
         const icaoList = tracked.map(a => a.icao24);
 
-        // Query both sources in parallel for maximum coverage
-        const [openSkyStates, adsbLolStates] = await Promise.all([
+        // Query both sources in parallel; neither should kill the other
+        const [openSkyResult, adsbLolResult] = await Promise.allSettled([
           fetchOpenSkyMultiple(icaoList),
           fetchAdsbLolMultiple(icaoList),
         ]);
 
-        // Merge: prefer OpenSky when both have data; fill gaps with adsb.lol
-        const states = [...openSkyStates];
-        for (const lolState of adsbLolStates) {
-          if (!states.find(s => s.icao24 === lolState.icao24)) {
-            states.push(lolState);
-          }
+        const openSkyStates = openSkyResult.status === 'fulfilled' ? openSkyResult.value : [];
+        const adsbLolStates = adsbLolResult.status === 'fulfilled' ? adsbLolResult.value : [];
+
+        if (openSkyResult.status === 'rejected') {
+          console.warn('OpenSky fetch failed:', openSkyResult.reason?.message);
         }
+
+        // Merge: prefer adsb.lol (better GA coverage); fill gaps with OpenSky
+        const statesByIcao = new Map();
+        for (const s of openSkyStates) statesByIcao.set(s.icao24, s);
+        for (const s of adsbLolStates) statesByIcao.set(s.icao24, s); // overwrites OpenSky
+        const states = [...statesByIcao.values()];
 
         for (const ac of tracked) {
           const state = states.find(s => s.icao24 === ac.icao24);
