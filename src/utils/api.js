@@ -122,13 +122,20 @@ export function metersToFeet(m) {
   return m ? Math.round(m * 3.28084) : 0;
 }
 
-/** Staleness threshold: adsb.lol `seen` field > 60s means no recent position */
-const ADSBLOL_STALE_THRESHOLD_S = 60;
+/**
+ * Staleness threshold: position older than 5 minutes is stale.
+ * GA aircraft in sparse-coverage areas often have 60-120s gaps between
+ * position reports, so 60s was too aggressive and caused missed tracks.
+ */
+const ADSBLOL_STALE_THRESHOLD_S = 300;
 
 /**
  * Normalize a single adsb.lol aircraft record to our shared state shape.
+ * Uses `seen_pos` (seconds since last position) when available for staleness,
+ * falling back to `seen` (seconds since any message).
  */
 function normalizeAdsbLolRecord(a) {
+  const seenPosSecs = a.seen_pos ?? a.seen ?? 0;
   const seenSecs = a.seen ?? 0;
   return {
     icao24: (a.hex || '').toLowerCase(),
@@ -150,29 +157,33 @@ function normalizeAdsbLolRecord(a) {
     spi: false,
     positionSource: 1,
     _source: 'adsblol',
-    _stale: seenSecs > ADSBLOL_STALE_THRESHOLD_S,
+    _stale: seenPosSecs > ADSBLOL_STALE_THRESHOLD_S,
   };
 }
 
 /**
+ * Parse an adsb.lol response body and return normalised, non-stale records.
+ */
+function parseAdsbLolResponse(data) {
+  if (!data?.ac) return [];
+  return data.ac
+    .map(normalizeAdsbLolRecord)
+    .filter(r => !r._stale && r.latitude != null && r.longitude != null);
+}
+
+/**
  * Fetch a single aircraft state from adsb.lol by ICAO24 hex code.
- * Returns null if not found or data is stale (seen > 60s).
  */
 export async function fetchAdsbLol(icao24) {
   const res = await fetch(`/api/adsblol/v2/icao/${icao24}/`);
   if (!res.ok) return null;
-
-  const data = await res.json();
-  if (!data.ac || data.ac.length === 0) return null;
-
-  const record = normalizeAdsbLolRecord(data.ac[0]);
-  return record._stale ? null : record;
+  const records = parseAdsbLolResponse(await res.json());
+  return records.length > 0 ? records[0] : null;
 }
 
 /**
  * Fetch multiple aircraft states from adsb.lol in a single request.
  * Uses comma-separated ICAO24 codes in the path to minimize API calls.
- * Filters out stale records (seen > 60s).
  */
 export async function fetchAdsbLolMultiple(icao24List) {
   if (icao24List.length === 0) return [];
@@ -181,12 +192,23 @@ export async function fetchAdsbLolMultiple(icao24List) {
   const res = await fetch(`/api/adsblol/v2/icao/${icaoPath}/`);
   if (!res.ok) return [];
 
-  const data = await res.json();
-  if (!data.ac) return [];
+  return parseAdsbLolResponse(await res.json());
+}
 
-  return data.ac
-    .map(normalizeAdsbLolRecord)
-    .filter(r => !r._stale && r.latitude != null && r.longitude != null);
+/**
+ * Fetch aircraft states by registration (tail number) from adsb.lol.
+ * Used as a fallback when ICAO24 hex lookup returns nothing — handles
+ * cases where the transponder broadcasts a different hex, or the
+ * N-number-to-hex conversion doesn't match.
+ */
+export async function fetchAdsbLolByReg(registrations) {
+  if (registrations.length === 0) return [];
+
+  const regPath = registrations.join(',');
+  const res = await fetch(`/api/adsblol/v2/reg/${regPath}/`);
+  if (!res.ok) return [];
+
+  return parseAdsbLolResponse(await res.json());
 }
 
 /**
