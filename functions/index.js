@@ -4,10 +4,11 @@ const { onRequest } = require("firebase-functions/v2/https");
  * Proxy requests to OpenSky Network API to avoid CORS issues in production.
  * Handles: /api/opensky/states/all?icao24=...
  */
-exports.opensky = onRequest({ region: "us-central1" }, async (req, res) => {
+exports.opensky = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
   // Forward query params to OpenSky
   const params = new URLSearchParams(req.query);
   const url = `https://opensky-network.org/api/states/all?${params.toString()}`;
+  console.log('[opensky] path:', req.path, '| url:', url);
 
   try {
     const response = await fetch(url, {
@@ -35,10 +36,11 @@ exports.opensky = onRequest({ region: "us-central1" }, async (req, res) => {
  * Handles: /api/adsblol/v2/icao/{icao24} and /api/adsblol/v2/icao/{hex1,hex2,...}
  * Adds required User-Agent header to avoid being filtered.
  */
-exports.adsbLol = onRequest({ region: "us-central1" }, async (req, res) => {
-  // Strip the hosting rewrite prefix — req.path includes the full original path
+exports.adsbLol = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
+  // Strip the hosting rewrite prefix if present
   const upstreamPath = req.path.replace(/^\/api\/adsblol/, '');
   const url = `https://api.adsb.lol${upstreamPath}`;
+  console.log('[adsbLol] req.path:', req.path, '| upstream:', url);
 
   try {
     const response = await fetch(url, {
@@ -67,10 +69,11 @@ exports.adsbLol = onRequest({ region: "us-central1" }, async (req, res) => {
  * Same readsb v2 API format as adsb.lol but with a different feeder network,
  * providing broader coverage for GA aircraft.
  */
-exports.airplanesLive = onRequest({ region: "us-central1" }, async (req, res) => {
-  // Strip the hosting rewrite prefix — req.path includes the full original path
+exports.airplanesLive = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
+  // Strip the hosting rewrite prefix if present
   const upstreamPath = req.path.replace(/^\/api\/airplaneslive/, '');
   const url = `https://api.airplanes.live${upstreamPath}`;
+  console.log('[airplanesLive] req.path:', req.path, '| upstream:', url);
 
   try {
     const response = await fetch(url, {
@@ -98,7 +101,7 @@ exports.airplanesLive = onRequest({ region: "us-central1" }, async (req, res) =>
  * Proxy requests to OpenWeatherMap API.
  * Handles: /api/weather/weather?lat=...&lon=...&appid=...&units=...
  */
-exports.weather = onRequest({ region: "us-central1" }, async (req, res) => {
+exports.weather = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
   const params = new URLSearchParams(req.query);
   const url = `https://api.openweathermap.org/data/2.5/weather?${params.toString()}`;
 

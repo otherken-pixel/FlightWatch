@@ -13,6 +13,7 @@ import { usePoller } from './utils/usePoller';
 import { useAuth } from './hooks/useAuth';
 import { migrateLocalData } from './services/firestore';
 import useStore from './store/useStore';
+import { isValidNNumber, nNumberToIcao24 } from './utils/nNumberToIcao';
 
 export default function App() {
   const { user, loading: authLoading } = useAuth();
@@ -32,6 +33,17 @@ export default function App() {
 
   // Start polling for tracked aircraft
   usePoller();
+
+  // Backfill ICAO24 hex for any aircraft missing it (e.g. added before conversion existed)
+  useEffect(() => {
+    const { aircraft, updateAircraft } = useStore.getState();
+    for (const ac of aircraft) {
+      if (!ac.icao24 && isValidNNumber(ac.tailNumber)) {
+        const hex = nNumberToIcao24(ac.tailNumber);
+        if (hex) updateAircraft(ac.id, { icao24: hex });
+      }
+    }
+  }, []);
 
   // Sync auth state to store and load cloud data
   useEffect(() => {
