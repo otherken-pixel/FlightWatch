@@ -36,25 +36,38 @@ export function usePoller() {
         completeTrip,
       } = useStore.getState();
 
-      const tracked = aircraft.filter(a => a.icao24);
-      if (tracked.length === 0) return;
+      if (aircraft.length === 0) return;
+      console.log('[FlightWatch] Polling', aircraft.length, 'aircraft:', aircraft.map(a => `${a.tailNumber}(${a.icao24 || 'no-hex'})`).join(', '));
+
+      // Split into aircraft with and without ICAO24 hex codes
+      const withIcao = aircraft.filter(a => a.icao24);
+      const withoutIcao = aircraft.filter(a => !a.icao24);
 
       try {
-        const icaoList = tracked.map(a => a.icao24);
+        const icaoList = withIcao.map(a => a.icao24);
 
-        // Query all three sources in parallel; none should kill the others
+        // Query all three sources in parallel by ICAO hex; none should kill the others
         const [openSkyResult, adsbLolResult, airplanesLiveResult] = await Promise.allSettled([
-          fetchOpenSkyMultiple(icaoList),
-          fetchAdsbLolMultiple(icaoList),
-          fetchAirplanesLiveMultiple(icaoList),
+          icaoList.length > 0 ? fetchOpenSkyMultiple(icaoList) : Promise.resolve([]),
+          icaoList.length > 0 ? fetchAdsbLolMultiple(icaoList) : Promise.resolve([]),
+          icaoList.length > 0 ? fetchAirplanesLiveMultiple(icaoList) : Promise.resolve([]),
         ]);
 
         const openSkyStates = openSkyResult.status === 'fulfilled' ? openSkyResult.value : [];
         const adsbLolStates = adsbLolResult.status === 'fulfilled' ? adsbLolResult.value : [];
         const airplanesLiveStates = airplanesLiveResult.status === 'fulfilled' ? airplanesLiveResult.value : [];
 
+        console.log('[FlightWatch] API results — OpenSky:', openSkyStates.length,
+          '| adsb.lol:', adsbLolStates.length,
+          '| airplanes.live:', airplanesLiveStates.length);
         if (openSkyResult.status === 'rejected') {
           console.warn('OpenSky fetch failed:', openSkyResult.reason?.message);
+        }
+        if (adsbLolResult.status === 'rejected') {
+          console.warn('adsb.lol fetch failed:', adsbLolResult.reason?.message);
+        }
+        if (airplanesLiveResult.status === 'rejected') {
+          console.warn('airplanes.live fetch failed:', airplanesLiveResult.reason?.message);
         }
 
         // Merge: later sources overwrite earlier; prefer volunteer networks over OpenSky
@@ -63,15 +76,18 @@ export function usePoller() {
         for (const s of adsbLolStates) statesByIcao.set(s.icao24, s);
         for (const s of airplanesLiveStates) statesByIcao.set(s.icao24, s);
 
-        // Fallback: for aircraft still missing, try by registration number.
-        // Catches cases where hex conversion doesn't match the transponder.
-        const missingAircraft = tracked.filter(a => !statesByIcao.has(a.icao24));
+        // Fallback: try by registration for aircraft still missing data OR without ICAO.
+        // Catches hex mismatches and aircraft that never got an ICAO24.
+        const missingAircraft = [
+          ...withIcao.filter(a => !statesByIcao.has(a.icao24)),
+          ...withoutIcao,
+        ];
         if (missingAircraft.length > 0) {
           const tailNumbers = missingAircraft.map(a => a.tailNumber);
           const matchRegResult = (s) => {
             return missingAircraft.find(
               a => a.tailNumber.toUpperCase() === (s.registration || s.callsign || '').toUpperCase()
-                || s.icao24 === a.icao24
+                || (a.icao24 && s.icao24 === a.icao24)
             );
           };
           try {
@@ -85,8 +101,11 @@ export function usePoller() {
             ];
             for (const s of regStates) {
               const match = matchRegResult(s);
-              if (match && !statesByIcao.has(match.icao24)) {
-                statesByIcao.set(match.icao24, { ...s, icao24: match.icao24 });
+              if (match) {
+                const key = match.icao24 || `reg_${match.tailNumber}`;
+                if (!statesByIcao.has(key)) {
+                  statesByIcao.set(key, { ...s, icao24: key });
+                }
               }
             }
           } catch (err) {
@@ -95,9 +114,14 @@ export function usePoller() {
         }
 
         const states = [...statesByIcao.values()];
+        console.log('[FlightWatch] Total merged states:', states.length,
+          states.length > 0 ? states.map(s => `${s.icao24}@${s.latitude},${s.longitude}`).join('; ') : '(none)');
 
-        for (const ac of tracked) {
-          const state = states.find(s => s.icao24 === ac.icao24);
+        for (const ac of aircraft) {
+          const state = states.find(s =>
+            (ac.icao24 && s.icao24 === ac.icao24) ||
+            s.icao24 === `reg_${ac.tailNumber}`
+          );
 
           if (state && state.latitude != null && state.longitude != null) {
             const oldState = ac.status;
