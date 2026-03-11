@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store/useStore';
-import { fetchOpenSkyMultiple } from './api';
+import { fetchOpenSkyMultiple, fetchAdsbExchange } from './api';
 import { determineFlightState, getStateTransitionEvent, isSignalLost } from './flightStateMachine';
 import { sendNotification, playNotificationSound } from './notifications';
 import { findNearestAirport } from './airports';
@@ -20,6 +20,7 @@ export function usePoller() {
       const {
         aircraft,
         notifications,
+        apiKeys,
         updateLiveData,
         updateAircraft,
         addTrailPoint,
@@ -35,6 +36,23 @@ export function usePoller() {
       try {
         const icaoList = tracked.map(a => a.icao24);
         const states = await fetchOpenSkyMultiple(icaoList);
+
+        // Find aircraft that OpenSky didn't return data for
+        const missingIcaos = icaoList.filter(
+          icao => !states.find(s => s.icao24 === icao)
+        );
+
+        // Try ADS-B Exchange as fallback for missing aircraft
+        if (missingIcaos.length > 0 && apiKeys.adsbExchange) {
+          const adsbxResults = await Promise.allSettled(
+            missingIcaos.map(icao => fetchAdsbExchange(icao, apiKeys.adsbExchange))
+          );
+          for (const result of adsbxResults) {
+            if (result.status === 'fulfilled' && result.value) {
+              states.push(...result.value);
+            }
+          }
+        }
 
         for (const ac of tracked) {
           const state = states.find(s => s.icao24 === ac.icao24);

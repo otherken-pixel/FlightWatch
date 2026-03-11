@@ -79,6 +79,14 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/opensky/, '/api'),
       },
+      '/api/adsbx': {
+        target: 'https://adsbexchange-com1.p.rapidapi.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/adsbx/, ''),
+        headers: {
+          'X-RapidAPI-Host': 'adsbexchange-com1.p.rapidapi.com',
+        },
+      },
       '/api/weather': {
         target: 'https://api.openweathermap.org',
         changeOrigin: true,
