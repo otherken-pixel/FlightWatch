@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import { timeAgo } from '../utils/api';
@@ -185,7 +185,16 @@ export default function Home() {
   const aircraft = useStore(s => s.aircraft);
   const flightHistory = useStore(s => s.flightHistory);
   const activeTrips = useStore(s => s.activeTrips);
+  const refreshNow = useStore(s => s.refreshNow);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    refreshNow();
+    // Show the spin animation for 1s so the user sees feedback
+    setTimeout(() => setRefreshing(false), 1000);
+  }, [refreshNow]);
 
   const getTripCount = (tailNumber) =>
     flightHistory.filter(t => t.tailNumber === tailNumber).length;
@@ -229,17 +238,39 @@ export default function Home() {
             <h2 className="text-[16px] font-bold" style={{ color: 'var(--color-text-primary)' }}>My Aircraft</h2>
             <p className="text-[13px]" style={{ color: 'var(--color-text-secondary)' }}>{aircraft.length} aircraft tracked</p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1 px-3.5 py-2 text-[15px] font-semibold"
-            style={{
-              background: 'var(--color-accent-dim)', color: 'var(--color-accent)', borderRadius: 10,
-              border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            <MdIcon name="add" style={{ fontSize: 20, color: 'var(--color-accent)' }} />
-            Add
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center justify-center"
+              title="Refresh now"
+              style={{
+                background: 'var(--color-card-mid)', borderRadius: 10,
+                border: 'none', cursor: 'pointer', width: 36, height: 36,
+              }}
+            >
+              <MdIcon
+                name="refresh"
+                style={{
+                  fontSize: 20,
+                  color: 'var(--color-text-secondary)',
+                  transition: 'transform 0.3s',
+                  animation: refreshing ? 'spin 0.8s linear infinite' : 'none',
+                }}
+              />
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1 px-3.5 py-2 text-[15px] font-semibold"
+              style={{
+                background: 'var(--color-accent-dim)', color: 'var(--color-accent)', borderRadius: 10,
+                border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              <MdIcon name="add" style={{ fontSize: 20, color: 'var(--color-accent)' }} />
+              Add
+            </button>
+          </div>
         </div>
 
         <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
