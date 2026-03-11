@@ -127,26 +127,28 @@ export function metersToFeet(m) {
  * GA aircraft in sparse-coverage areas often have 60-120s gaps between
  * position reports, so 60s was too aggressive and caused missed tracks.
  */
-const ADSBLOL_STALE_THRESHOLD_S = 300;
+const READSB_STALE_THRESHOLD_S = 300;
 
 /**
- * Normalize a single adsb.lol aircraft record to our shared state shape.
+ * Normalize a single readsb-format aircraft record to our shared state shape.
+ * Works with adsb.lol, airplanes.live, and adsb.fi (all use the same format).
  * Uses `seen_pos` (seconds since last position) when available for staleness,
  * falling back to `seen` (seconds since any message).
  */
-function normalizeAdsbLolRecord(a) {
+function normalizeReadsbRecord(a, source) {
   const seenPosSecs = a.seen_pos ?? a.seen ?? 0;
   const seenSecs = a.seen ?? 0;
   return {
     icao24: (a.hex || '').toLowerCase(),
     callsign: (a.flight || '').trim(),
+    registration: (a.r || '').trim(),
     originCountry: '',
     timePosition: Math.floor(Date.now() / 1000) - seenSecs,
     lastContact: Math.floor(Date.now() / 1000) - seenSecs,
     longitude: a.lon ?? null,
     latitude: a.lat ?? null,
     baroAltitude: a.alt_baro != null && a.alt_baro !== 'ground'
-      ? a.alt_baro * 0.3048   // adsb.lol reports feet → meters
+      ? a.alt_baro * 0.3048   // readsb reports feet → meters
       : null,
     onGround: a.alt_baro === 'ground',
     velocity: a.gs != null ? a.gs * 0.514444 : null, // knots → m/s
@@ -156,59 +158,58 @@ function normalizeAdsbLolRecord(a) {
     squawk: a.squawk || null,
     spi: false,
     positionSource: 1,
-    _source: 'adsblol',
-    _stale: seenPosSecs > ADSBLOL_STALE_THRESHOLD_S,
+    _source: source,
+    _stale: seenPosSecs > READSB_STALE_THRESHOLD_S,
   };
 }
 
 /**
- * Parse an adsb.lol response body and return normalised, non-stale records.
+ * Parse a readsb-format response body and return normalised, non-stale records.
  */
-function parseAdsbLolResponse(data) {
+function parseReadsbResponse(data, source) {
   if (!data?.ac) return [];
   return data.ac
-    .map(normalizeAdsbLolRecord)
+    .map(a => normalizeReadsbRecord(a, source))
     .filter(r => !r._stale && r.latitude != null && r.longitude != null);
 }
 
-/**
- * Fetch a single aircraft state from adsb.lol by ICAO24 hex code.
- */
+// ── adsb.lol ──────────────────────────────────────────────────────────
+
 export async function fetchAdsbLol(icao24) {
   const res = await fetch(`/api/adsblol/v2/icao/${icao24}/`);
   if (!res.ok) return null;
-  const records = parseAdsbLolResponse(await res.json());
+  const records = parseReadsbResponse(await res.json(), 'adsblol');
   return records.length > 0 ? records[0] : null;
 }
 
-/**
- * Fetch multiple aircraft states from adsb.lol in a single request.
- * Uses comma-separated ICAO24 codes in the path to minimize API calls.
- */
 export async function fetchAdsbLolMultiple(icao24List) {
   if (icao24List.length === 0) return [];
-
-  const icaoPath = icao24List.join(',');
-  const res = await fetch(`/api/adsblol/v2/icao/${icaoPath}/`);
+  const res = await fetch(`/api/adsblol/v2/icao/${icao24List.join(',')}/`);
   if (!res.ok) return [];
-
-  return parseAdsbLolResponse(await res.json());
+  return parseReadsbResponse(await res.json(), 'adsblol');
 }
 
-/**
- * Fetch aircraft states by registration (tail number) from adsb.lol.
- * Used as a fallback when ICAO24 hex lookup returns nothing — handles
- * cases where the transponder broadcasts a different hex, or the
- * N-number-to-hex conversion doesn't match.
- */
 export async function fetchAdsbLolByReg(registrations) {
   if (registrations.length === 0) return [];
-
-  const regPath = registrations.join(',');
-  const res = await fetch(`/api/adsblol/v2/reg/${regPath}/`);
+  const res = await fetch(`/api/adsblol/v2/reg/${registrations.join(',')}/`);
   if (!res.ok) return [];
+  return parseReadsbResponse(await res.json(), 'adsblol');
+}
 
-  return parseAdsbLolResponse(await res.json());
+// ── airplanes.live (additional feeder network for better coverage) ────
+
+export async function fetchAirplanesLiveMultiple(icao24List) {
+  if (icao24List.length === 0) return [];
+  const res = await fetch(`/api/airplaneslive/v2/hex/${icao24List.join(',')}`);
+  if (!res.ok) return [];
+  return parseReadsbResponse(await res.json(), 'airplaneslive');
+}
+
+export async function fetchAirplanesLiveByReg(registrations) {
+  if (registrations.length === 0) return [];
+  const res = await fetch(`/api/airplaneslive/v2/reg/${registrations.join(',')}`);
+  if (!res.ok) return [];
+  return parseReadsbResponse(await res.json(), 'airplaneslive');
 }
 
 /**

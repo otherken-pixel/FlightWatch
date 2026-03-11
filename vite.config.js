@@ -87,6 +87,14 @@ export default defineConfig({
           'User-Agent': 'FlightWatch-App-Internal',
         },
       },
+      '/api/airplaneslive': {
+        target: 'https://api.airplanes.live',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/airplaneslive/, ''),
+        headers: {
+          'User-Agent': 'FlightWatch-App-Internal',
+        },
+      },
       '/api/weather': {
         target: 'https://api.openweathermap.org',
         changeOrigin: true,

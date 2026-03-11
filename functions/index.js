@@ -63,6 +63,37 @@ exports.adsbLol = onRequest({ region: "us-central1" }, async (req, res) => {
 });
 
 /**
+ * Proxy requests to airplanes.live (additional ADS-B source, no API key required).
+ * Same readsb v2 API format as adsb.lol but with a different feeder network,
+ * providing broader coverage for GA aircraft.
+ */
+exports.airplanesLive = onRequest({ region: "us-central1" }, async (req, res) => {
+  const upstreamPath = req.path; // e.g. /v2/hex/a3957b
+  const url = `https://api.airplanes.live${upstreamPath}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": "FlightWatch-App-Internal",
+      },
+    });
+
+    if (!response.ok) {
+      res.status(response.status).json({ error: `airplanes.live API error: ${response.status}` });
+      return;
+    }
+
+    const data = await response.json();
+    res.set("Cache-Control", "no-cache");
+    res.json(data);
+  } catch (err) {
+    console.error("airplanes.live proxy error:", err);
+    res.status(502).json({ error: "Failed to reach airplanes.live API" });
+  }
+});
+
+/**
  * Proxy requests to OpenWeatherMap API.
  * Handles: /api/weather/weather?lat=...&lon=...&appid=...&units=...
  */
