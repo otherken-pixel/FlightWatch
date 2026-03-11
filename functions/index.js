@@ -1,21 +1,34 @@
-const { onRequest } = require("firebase-functions/v2/https");
+const functions = require("firebase-functions");
+
+function setCors(req, res) {
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return true;
+  }
+  return false;
+}
 
 /**
  * Proxy requests to OpenSky Network API to avoid CORS issues in production.
  * Usage: /api/opensky?icao24=abc123,def456
  */
-exports.opensky = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
+exports.opensky = functions.region("us-central1").https.onRequest(async (req, res) => {
+  if (setCors(req, res)) return;
+
   const params = new URLSearchParams(req.query);
   const url = `https://opensky-network.org/api/states/all?${params.toString()}`;
-  console.log('[opensky] Fetching:', url);
+  console.log("[opensky] Fetching:", url);
 
   try {
     const response = await fetch(url, {
-      headers: { "Accept": "application/json" },
+      headers: { Accept: "application/json" },
     });
 
     if (!response.ok) {
-      console.warn('[opensky] upstream returned', response.status);
+      console.warn("[opensky] upstream returned", response.status);
       res.status(response.status).json({ error: `OpenSky API error: ${response.status}` });
       return;
     }
@@ -35,29 +48,31 @@ exports.opensky = onRequest({ region: "us-central1", cors: true }, async (req, r
  * Usage: /api/adsblol?type=icao&ids=abc123,def456
  *    or: /api/adsblol?type=reg&ids=N312NG,N48KL
  */
-exports.adsbLol = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
+exports.adsbLol = functions.region("us-central1").https.onRequest(async (req, res) => {
+  if (setCors(req, res)) return;
+
   const type = req.query.type; // 'icao' or 'reg'
   const ids = req.query.ids;
 
   if (!type || !ids) {
-    res.status(400).json({ error: 'Missing type or ids query parameter' });
+    res.status(400).json({ error: "Missing type or ids query parameter" });
     return;
   }
 
   const url = `https://api.adsb.lol/v2/${type}/${ids}`;
-  console.log('[adsbLol] Fetching:', url);
+  console.log("[adsbLol] Fetching:", url);
 
   try {
     const response = await fetch(url, {
       headers: {
-        "Accept": "application/json",
+        Accept: "application/json",
         "User-Agent": "FlightWatch/1.0",
       },
     });
 
     if (!response.ok) {
       const body = await response.text();
-      console.warn('[adsbLol] upstream returned', response.status, body.substring(0, 200));
+      console.warn("[adsbLol] upstream returned", response.status, body.substring(0, 200));
       res.status(response.status).json({ error: `adsb.lol API error: ${response.status}` });
       return;
     }
@@ -74,13 +89,15 @@ exports.adsbLol = onRequest({ region: "us-central1", cors: true }, async (req, r
 /**
  * Proxy requests to OpenWeatherMap API.
  */
-exports.weather = onRequest({ region: "us-central1", cors: true }, async (req, res) => {
+exports.weather = functions.region("us-central1").https.onRequest(async (req, res) => {
+  if (setCors(req, res)) return;
+
   const params = new URLSearchParams(req.query);
   const url = `https://api.openweathermap.org/data/2.5/weather?${params.toString()}`;
 
   try {
     const response = await fetch(url, {
-      headers: { "Accept": "application/json" },
+      headers: { Accept: "application/json" },
     });
 
     if (!response.ok) {
