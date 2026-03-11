@@ -49,24 +49,23 @@ function MapFollower({ position }) {
   return null;
 }
 
-function StatChip({ icon, label, value }) {
+function StatCard({ icon, label, value }) {
   return (
     <div
-      className="flex flex-col items-center px-3 py-2"
       style={{
-        background: 'rgba(0,18,51,0.5)',
+        background: 'var(--color-card)',
+        border: '1px solid var(--color-separator)',
         borderRadius: 14,
-        border: '1px solid rgba(72,202,228,0.12)',
-        minWidth: 80,
+        padding: '14px 16px',
       }}
     >
-      <div className="flex items-center gap-1 mb-1">
-        <MdIcon name={icon} style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }} />
-        <span className="text-[9px] uppercase tracking-wider font-bold" style={{ color: 'var(--color-text-tertiary)' }}>
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <MdIcon name={icon} style={{ fontSize: 14, color: 'var(--color-text-tertiary)' }} />
+        <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: 'var(--color-text-tertiary)' }}>
           {label}
         </span>
       </div>
-      <span className="text-sm font-bold font-mono" style={{ color: 'var(--color-text-primary)' }}>
+      <span className="text-base font-bold font-mono" style={{ color: 'var(--color-text-primary)' }}>
         {value}
       </span>
     </div>
@@ -97,22 +96,25 @@ export default function LiveTrack() {
   const currentPosition = animated.position
     || (trailPositions.length > 0 ? trailPositions[trailPositions.length - 1] : null);
 
-  const isDark = settings.mapStyle === 'dark';
-  const tileUrl = isDark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  const tileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
   if (!ac) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6">
-        <MdIcon name="flight_off" style={{ fontSize: 48, color: 'var(--color-text-tertiary)' }} />
+        <div
+          className="flex items-center justify-center"
+          style={{ width: 64, height: 64, borderRadius: 18, background: 'var(--color-accent-dim)' }}
+        >
+          <MdIcon name="flight_off" style={{ fontSize: 32, color: 'var(--color-accent)' }} />
+        </div>
         <p className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>Aircraft not found</p>
         <button
           onClick={() => navigate('/')}
-          className="px-4 py-2 text-sm font-medium"
+          className="px-5 py-2.5 text-sm font-semibold"
           style={{
-            background: 'var(--color-accent-dim)', color: 'var(--color-accent)',
-            borderRadius: 12, border: '1px solid rgba(0,122,255,0.3)', cursor: 'pointer', fontFamily: 'inherit',
+            background: 'var(--color-accent)', color: '#fff',
+            borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+            boxShadow: '0 4px 16px rgba(0,122,255,0.35)',
           }}
         >
           Back to Home
@@ -129,111 +131,202 @@ export default function LiveTrack() {
   const isAirborne = ac.status === 'airborne';
   const isStale = animated.stale;
 
+  const chipStyle = {
+    display: 'inline-flex', alignItems: 'center', gap: 4,
+    background: 'rgba(255,255,255,0.1)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 999, padding: '4px 10px',
+    fontSize: 12, color: 'rgba(255,255,255,0.7)',
+  };
+
   return (
-    <div className="flex-1 flex flex-col overflow-hidden relative">
-      {/* Back button overlay */}
-      <div className="absolute top-3 left-3 z-[500] flex items-center gap-2">
-        <button
-          onClick={() => navigate(`/aircraft/${encodeURIComponent(decodedTail)}`)}
-          className="glass flex items-center gap-2 px-3 py-2"
-          style={{ borderRadius: 14, cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}
-        >
-          <MdIcon name="arrow_back" style={{ fontSize: 18, color: 'var(--color-text-primary)' }} />
-          <span className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-            {ac.tailNumber}
-          </span>
-        </button>
-
-        {isAirborne && (
-          <div
-            className="glass flex items-center gap-2 px-3 py-2"
-            style={{ borderRadius: 14 }}
-          >
-            <div className="pulse-dot" style={{
-              width: 8, height: 8, borderRadius: 99,
-              background: isStale ? '#FF9500' : '#34C759',
-            }} />
-            <span className="text-xs font-bold" style={{ color: isStale ? '#FF9500' : '#34C759' }}>
-              {isStale ? 'STALE' : 'LIVE'}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Map */}
-      <div className="flex-1">
-        <MapContainer
-          center={currentPosition || [39.8, -98.5]}
-          zoom={currentPosition ? 10 : 5}
-          className="h-full w-full"
-          zoomControl={false}
-        >
-          <TileLayer url={tileUrl} />
-          {currentPosition && <MapFollower position={currentPosition} />}
-
-          {/* Trail */}
-          {trailPositions.length > 1 && (
-            <Polyline
-              positions={trailPositions}
-              pathOptions={{ color: '#007AFF', weight: 3, opacity: 0.7 }}
-            />
-          )}
-
-          {/* Departure marker */}
-          {activeTrip?.departureCoords && (
-            <Marker
-              position={[activeTrip.departureCoords.lat, activeTrip.departureCoords.lng]}
-              icon={createDepartureIcon()}
-            />
-          )}
-
-          {/* Current position marker */}
-          {currentPosition && (
-            <Marker
-              position={currentPosition}
-              icon={createPlaneIcon(heading)}
-            />
-          )}
-        </MapContainer>
-      </div>
-
-      {/* Bottom data strip — sky gradient glass */}
+    <div className="flex-1 overflow-y-auto">
+      {/* Header with sky gradient — matches AircraftDetail */}
       <div
-        className="shrink-0 px-4 py-3 overflow-x-auto"
+        className="sky-gradient"
         style={{
-          background: 'linear-gradient(180deg, rgba(0,18,51,0.90) 0%, rgba(2,62,138,0.93) 50%, rgba(0,119,182,0.88) 100%)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          borderTop: '1px solid rgba(72,202,228,0.15)',
-          boxShadow: '0 -4px 20px rgba(0,18,51,0.5)',
+          padding: '32px 24px 36px',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        {/* Info row */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">{ac.emoji}</span>
-          <span className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
-            {ac.nickname}
-          </span>
-          {data?.callsign && (
-            <span className="text-xs font-mono px-2 py-0.5" style={{
-              background: 'var(--color-card-mid)', borderRadius: 6, color: 'var(--color-text-secondary)',
-            }}>
-              {data.callsign}
-            </span>
-          )}
-          <div className="flex-1" />
-          <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
-            {elapsed}
-          </span>
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.03,
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }} />
+        <div style={{ position: 'relative', zIndex: 1 }} className="max-w-5xl mx-auto px-0 md:px-4">
+          <button
+            onClick={() => navigate(`/aircraft/${encodeURIComponent(decodedTail)}`)}
+            className="flex items-center gap-1 mb-5 text-sm font-medium"
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <MdIcon name="arrow_back" style={{ fontSize: 18 }} />
+            {ac.tailNumber}
+          </button>
+
+          <div className="flex items-center gap-4">
+            <div
+              className="flex items-center justify-center shrink-0"
+              style={{
+                width: 56, height: 56, borderRadius: 16,
+                background: 'rgba(255,255,255,0.12)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+              }}
+            >
+              <MdIcon name="radar" style={{ fontSize: 28, color: '#fff' }} />
+            </div>
+            <div>
+              <div className="flex items-center gap-3">
+                <div style={{ fontSize: 26, fontWeight: 700, color: '#fff', letterSpacing: '-0.3px' }}>
+                  {ac.nickname}
+                </div>
+                {isAirborne && (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1"
+                    style={{
+                      background: isStale ? 'rgba(255,149,0,0.2)' : 'rgba(52,199,89,0.2)',
+                      border: `1px solid ${isStale ? 'rgba(255,149,0,0.4)' : 'rgba(52,199,89,0.4)'}`,
+                      borderRadius: 999,
+                    }}
+                  >
+                    <div className="pulse-dot" style={{
+                      width: 7, height: 7, borderRadius: 99,
+                      background: isStale ? '#FF9500' : '#34C759',
+                    }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: isStale ? '#FF9500' : '#34C759' }}>
+                      {isStale ? 'STALE' : 'LIVE'}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
+                {ac.tailNumber} · {ac.aircraftType || 'Aircraft'}
+              </div>
+            </div>
+          </div>
+
+          {/* Info chips */}
+          <div className="flex flex-wrap items-center gap-2 mt-5">
+            {data?.callsign && (
+              <div style={chipStyle}>
+                <MdIcon name="label" style={{ fontSize: 12 }} />
+                <span className="font-mono">{data.callsign}</span>
+              </div>
+            )}
+            <div style={chipStyle}>
+              <MdIcon name="timer" style={{ fontSize: 12 }} />
+              {elapsed}
+            </div>
+            {data?.squawk && (
+              <div style={chipStyle}>
+                <MdIcon name="cell_tower" style={{ fontSize: 12 }} />
+                <span className="font-mono">{data.squawk}</span>
+              </div>
+            )}
+            <div style={chipStyle}>
+              <MdIcon name="route" style={{ fontSize: 12 }} />
+              {trailPositions.length} trail pts
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content area */}
+      <div className="max-w-5xl mx-auto px-4 md:px-8 pb-20 md:pb-8 mt-5">
+        {/* Map card */}
+        <div
+          style={{
+            borderRadius: 16,
+            overflow: 'hidden',
+            border: '1px solid var(--color-separator)',
+            boxShadow: 'var(--shadow-sm)',
+            marginBottom: 20,
+          }}
+        >
+          <div style={{ height: 320 }}>
+            <MapContainer
+              center={currentPosition || [39.8, -98.5]}
+              zoom={currentPosition ? 10 : 5}
+              className="h-full w-full"
+              zoomControl={false}
+            >
+              <TileLayer url={tileUrl} />
+              {currentPosition && <MapFollower position={currentPosition} />}
+
+              {/* Trail */}
+              {trailPositions.length > 1 && (
+                <Polyline
+                  positions={trailPositions}
+                  pathOptions={{ color: '#007AFF', weight: 3, opacity: 0.7 }}
+                />
+              )}
+
+              {/* Departure marker */}
+              {activeTrip?.departureCoords && (
+                <Marker
+                  position={[activeTrip.departureCoords.lat, activeTrip.departureCoords.lng]}
+                  icon={createDepartureIcon()}
+                />
+              )}
+
+              {/* Current position marker */}
+              {currentPosition && (
+                <Marker
+                  position={currentPosition}
+                  icon={createPlaneIcon(heading)}
+                />
+              )}
+            </MapContainer>
+          </div>
+          {/* Map footer */}
+          <div
+            className="flex items-center justify-between px-4 py-2.5"
+            style={{
+              background: 'var(--color-card)',
+              borderTop: '1px solid var(--color-separator)',
+            }}
+          >
+            <div className="flex items-center gap-1.5">
+              <MdIcon name="location_on" style={{ fontSize: 14, color: 'var(--color-text-tertiary)' }} />
+              <span className="text-xs font-mono" style={{ color: 'var(--color-text-secondary)' }}>
+                {currentPosition
+                  ? `${currentPosition[0].toFixed(4)}, ${currentPosition[1].toFixed(4)}`
+                  : 'No position'}
+              </span>
+            </div>
+            {activeTrip?.departureAirport && (
+              <div className="flex items-center gap-1.5">
+                <MdIcon name="flight_takeoff" style={{ fontSize: 14, color: 'var(--color-text-tertiary)' }} />
+                <span className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                  From {activeTrip.departureAirport}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Stats row */}
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-          <StatChip icon="height" label="Alt" value={altitude ? `${altitude.toLocaleString()} ft` : '--'} />
-          <StatChip icon="speed" label="Speed" value={speed ? `${speed} kts` : '--'} />
-          <StatChip icon="explore" label="Hdg" value={heading != null ? `${Math.round(heading)}° ${headingToCompass(heading)}` : '--'} />
-          <StatChip icon="trending_up" label="V/S" value={vRate ? `${vRate > 0 ? '+' : ''}${vRate} fpm` : '--'} />
-          {data?.squawk && <StatChip icon="cell_tower" label="Squawk" value={data.squawk} />}
+        {/* Flight Data section */}
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-bold" style={{ color: 'var(--color-text-primary)' }}>
+            Flight Data
+          </h2>
+          {isAirborne && (
+            <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
+              Updated live
+            </span>
+          )}
+        </div>
+
+        <div
+          className="grid gap-3"
+          style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}
+        >
+          <StatCard icon="height" label="Altitude" value={altitude ? `${altitude.toLocaleString()} ft` : '--'} />
+          <StatCard icon="speed" label="Speed" value={speed ? `${speed} kts` : '--'} />
+          <StatCard icon="explore" label="Heading" value={heading != null ? `${Math.round(heading)}° ${headingToCompass(heading)}` : '--'} />
+          <StatCard icon="trending_up" label="Vertical Speed" value={vRate ? `${vRate > 0 ? '+' : ''}${vRate} fpm` : '--'} />
         </div>
       </div>
     </div>
