@@ -31,36 +31,25 @@ exports.opensky = onRequest({ region: "us-central1" }, async (req, res) => {
 });
 
 /**
- * Proxy requests to ADS-B Exchange (RapidAPI) to keep API keys server-side.
- * Handles: /api/adsbx/v2/icao/:icao24/
+ * Proxy requests to adsb.lol (no API key required).
+ * Handles: /api/adsblol/v2/icao/{icao24} and /api/adsblol/v2/icao/{hex1,hex2,...}
+ * Adds required User-Agent header to avoid being filtered.
  */
-exports.adsbx = onRequest({ region: "us-central1" }, async (req, res) => {
-  // Extract the path after /api/adsbx/
-  const pathMatch = req.path.match(/\/v2\/icao\/([a-fA-F0-9]+)/);
-  if (!pathMatch) {
-    res.status(400).json({ error: "Invalid request path" });
-    return;
-  }
-  const icao24 = pathMatch[1];
-  const apiKey = req.query.apiKey;
-  if (!apiKey) {
-    res.status(400).json({ error: "Missing apiKey parameter" });
-    return;
-  }
-
-  const url = `https://adsbexchange-com1.p.rapidapi.com/v2/icao/${icao24}/`;
+exports.adsbLol = onRequest({ region: "us-central1" }, async (req, res) => {
+  // Forward the path after /api/adsblol directly to adsb.lol
+  const upstreamPath = req.path; // e.g. /v2/icao/a3957b/
+  const url = `https://api.adsb.lol${upstreamPath}`;
 
   try {
     const response = await fetch(url, {
       headers: {
-        "X-RapidAPI-Key": apiKey,
-        "X-RapidAPI-Host": "adsbexchange-com1.p.rapidapi.com",
         "Accept": "application/json",
+        "User-Agent": "FlightWatch-App-Internal",
       },
     });
 
     if (!response.ok) {
-      res.status(response.status).json({ error: `ADSBx API error: ${response.status}` });
+      res.status(response.status).json({ error: `adsb.lol API error: ${response.status}` });
       return;
     }
 
@@ -68,8 +57,8 @@ exports.adsbx = onRequest({ region: "us-central1" }, async (req, res) => {
     res.set("Cache-Control", "no-cache");
     res.json(data);
   } catch (err) {
-    console.error("ADSBx proxy error:", err);
-    res.status(502).json({ error: "Failed to reach ADS-B Exchange API" });
+    console.error("adsb.lol proxy error:", err);
+    res.status(502).json({ error: "Failed to reach adsb.lol API" });
   }
 });
 

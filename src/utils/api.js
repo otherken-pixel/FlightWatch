@@ -122,42 +122,71 @@ export function metersToFeet(m) {
   return m ? Math.round(m * 3.28084) : 0;
 }
 
-/**
- * Fetch aircraft state from ADS-B Exchange (RapidAPI) by ICAO24 hex code.
- * Returns data in the same shape as fetchOpenSky for easy interop.
- */
-export async function fetchAdsbExchange(icao24, apiKey) {
-  if (!apiKey) return null;
-  const url = `/api/adsbx/v2/icao/${icao24}/?apiKey=${encodeURIComponent(apiKey)}`;
+/** Staleness threshold: adsb.lol `seen` field > 60s means no recent position */
+const ADSBLOL_STALE_THRESHOLD_S = 60;
 
-  const res = await fetch(url);
+/**
+ * Normalize a single adsb.lol aircraft record to our shared state shape.
+ */
+function normalizeAdsbLolRecord(a) {
+  const seenSecs = a.seen ?? 0;
+  return {
+    icao24: (a.hex || '').toLowerCase(),
+    callsign: (a.flight || '').trim(),
+    originCountry: '',
+    timePosition: Math.floor(Date.now() / 1000) - seenSecs,
+    lastContact: Math.floor(Date.now() / 1000) - seenSecs,
+    longitude: a.lon ?? null,
+    latitude: a.lat ?? null,
+    baroAltitude: a.alt_baro != null && a.alt_baro !== 'ground'
+      ? a.alt_baro * 0.3048   // adsb.lol reports feet → meters
+      : null,
+    onGround: a.alt_baro === 'ground',
+    velocity: a.gs != null ? a.gs * 0.514444 : null, // knots → m/s
+    heading: a.track ?? null,
+    verticalRate: a.baro_rate != null ? a.baro_rate * 0.00508 : null, // ft/min → m/s
+    geoAltitude: a.alt_geom != null ? a.alt_geom * 0.3048 : null,
+    squawk: a.squawk || null,
+    spi: false,
+    positionSource: 1,
+    _source: 'adsblol',
+    _stale: seenSecs > ADSBLOL_STALE_THRESHOLD_S,
+  };
+}
+
+/**
+ * Fetch a single aircraft state from adsb.lol by ICAO24 hex code.
+ * Returns null if not found or data is stale (seen > 60s).
+ */
+export async function fetchAdsbLol(icao24) {
+  const res = await fetch(`/api/adsblol/v2/icao/${icao24}/`);
   if (!res.ok) return null;
 
   const data = await res.json();
   if (!data.ac || data.ac.length === 0) return null;
 
-  // Normalize ADS-B Exchange format to match our OpenSky shape
-  return data.ac.map(a => ({
-    icao24: (a.hex || a.icao || icao24).toLowerCase(),
-    callsign: (a.flight || a.call || '').trim(),
-    originCountry: '',
-    timePosition: a.seen != null ? Math.floor(Date.now() / 1000) - a.seen : null,
-    lastContact: a.seen != null ? Math.floor(Date.now() / 1000) - a.seen : null,
-    longitude: a.lon != null ? a.lon : null,
-    latitude: a.lat != null ? a.lat : null,
-    baroAltitude: a.alt_baro != null && a.alt_baro !== 'ground'
-      ? a.alt_baro * 0.3048   // ADSBx reports feet, convert to meters
-      : null,
-    onGround: a.alt_baro === 'ground' || (a.ground === true),
-    velocity: a.gs != null ? a.gs * 0.514444 : null, // knots to m/s
-    heading: a.track != null ? a.track : null,
-    verticalRate: a.baro_rate != null ? a.baro_rate * 0.00508 : null, // ft/min to m/s
-    geoAltitude: a.alt_geom != null ? a.alt_geom * 0.3048 : null,
-    squawk: a.squawk || null,
-    spi: false,
-    positionSource: 1,
-    _source: 'adsbx',
-  }));
+  const record = normalizeAdsbLolRecord(data.ac[0]);
+  return record._stale ? null : record;
+}
+
+/**
+ * Fetch multiple aircraft states from adsb.lol in a single request.
+ * Uses comma-separated ICAO24 codes in the path to minimize API calls.
+ * Filters out stale records (seen > 60s).
+ */
+export async function fetchAdsbLolMultiple(icao24List) {
+  if (icao24List.length === 0) return [];
+
+  const icaoPath = icao24List.join(',');
+  const res = await fetch(`/api/adsblol/v2/icao/${icaoPath}/`);
+  if (!res.ok) return [];
+
+  const data = await res.json();
+  if (!data.ac) return [];
+
+  return data.ac
+    .map(normalizeAdsbLolRecord)
+    .filter(r => !r._stale && r.latitude != null && r.longitude != null);
 }
 
 /**

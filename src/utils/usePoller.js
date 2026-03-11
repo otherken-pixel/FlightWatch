@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store/useStore';
-import { fetchOpenSkyMultiple, fetchAdsbExchange } from './api';
+import { fetchOpenSkyMultiple, fetchAdsbLolMultiple } from './api';
 import { determineFlightState, getStateTransitionEvent, isSignalLost } from './flightStateMachine';
 import { sendNotification, playNotificationSound } from './notifications';
 import { findNearestAirport } from './airports';
@@ -20,7 +20,6 @@ export function usePoller() {
       const {
         aircraft,
         notifications,
-        apiKeys,
         updateLiveData,
         updateAircraft,
         addTrailPoint,
@@ -35,22 +34,18 @@ export function usePoller() {
 
       try {
         const icaoList = tracked.map(a => a.icao24);
-        const states = await fetchOpenSkyMultiple(icaoList);
 
-        // Find aircraft that OpenSky didn't return data for
-        const missingIcaos = icaoList.filter(
-          icao => !states.find(s => s.icao24 === icao)
-        );
+        // Query both sources in parallel for maximum coverage
+        const [openSkyStates, adsbLolStates] = await Promise.all([
+          fetchOpenSkyMultiple(icaoList),
+          fetchAdsbLolMultiple(icaoList),
+        ]);
 
-        // Try ADS-B Exchange as fallback for missing aircraft
-        if (missingIcaos.length > 0 && apiKeys.adsbExchange) {
-          const adsbxResults = await Promise.allSettled(
-            missingIcaos.map(icao => fetchAdsbExchange(icao, apiKeys.adsbExchange))
-          );
-          for (const result of adsbxResults) {
-            if (result.status === 'fulfilled' && result.value) {
-              states.push(...result.value);
-            }
+        // Merge: prefer OpenSky when both have data; fill gaps with adsb.lol
+        const states = [...openSkyStates];
+        for (const lolState of adsbLolStates) {
+          if (!states.find(s => s.icao24 === lolState.icao24)) {
+            states.push(lolState);
           }
         }
 
