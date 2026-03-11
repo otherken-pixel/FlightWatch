@@ -168,30 +168,6 @@ export async function fetchAdsbLolByReg(registrations) {
   return parseReadsbResponse(await res.json(), 'adsblol');
 }
 
-// ── airplanes.live (direct CORS calls) ──────────────────────────────
-
-export async function fetchAirplanesLiveMultiple(icao24List) {
-  if (icao24List.length === 0) return [];
-  const url = `https://api.airplanes.live/v2/hex/${icao24List.join(',')}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    console.warn(`[airplanes.live] ${url} → ${res.status}`);
-    return [];
-  }
-  return parseReadsbResponse(await res.json(), 'airplaneslive');
-}
-
-export async function fetchAirplanesLiveByReg(registrations) {
-  if (registrations.length === 0) return [];
-  const url = `https://api.airplanes.live/v2/reg/${registrations.join(',')}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    console.warn(`[airplanes.live reg] ${url} → ${res.status}`);
-    return [];
-  }
-  return parseReadsbResponse(await res.json(), 'airplaneslive');
-}
-
 /**
  * Convert heading degrees to compass direction
  */
