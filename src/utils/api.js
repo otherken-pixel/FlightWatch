@@ -16,6 +16,8 @@ export async function fetchOpenSkyMultiple(icao24List) {
     throw new Error(`OpenSky network error: ${err.message}`);
   }
   if (!res.ok) throw new Error(`OpenSky API error: ${res.status}`);
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('json')) throw new Error(`OpenSky proxy returned non-JSON (${ct}) — Cloud Function may not be deployed`);
 
   const data = await res.json();
   if (!data.states) return [];
@@ -155,44 +157,70 @@ function parseReadsbResponse(data, source) {
     .filter(r => !r._stale && r.latitude != null && r.longitude != null);
 }
 
-// ── adsb.lol (via Firebase proxy to avoid CORS) ────────────────────
+// ── adsb.lol helpers ───────────────────────────────────────────────
+
+/**
+ * Returns true when the response is HTML (e.g. Firebase catch-all returning
+ * index.html because the Cloud Function isn't deployed/reachable).
+ */
+function isJsonResponse(res) {
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('json');
+}
+
+/**
+ * Try the Firebase proxy first; if it returns HTML or errors out, fall back
+ * to calling api.adsb.lol directly (it supports CORS from browsers).
+ */
+async function adsbLolFetch(type, ids) {
+  // 1. Proxy path (works in production when Cloud Functions are deployed)
+  try {
+    const res = await fetch(`/api/adsblol?type=${type}&ids=${ids}`);
+    if (res.ok && isJsonResponse(res)) {
+      return await res.json();
+    }
+    console.warn(`[adsb.lol] proxy ${res.ok ? 'returned non-JSON' : `status ${res.status}`} — trying direct`);
+  } catch (err) {
+    console.warn(`[adsb.lol] proxy error: ${err.message} — trying direct`);
+  }
+
+  // 2. Direct fallback (adsb.lol supports CORS)
+  const res = await fetch(`https://api.adsb.lol/v2/${type}/${ids}`, {
+    headers: { 'User-Agent': 'FlightWatch/1.0' },
+  });
+  if (!res.ok) throw new Error(`adsb.lol direct returned ${res.status}`);
+  return res.json();
+}
 
 export async function fetchAdsbLol(icao24) {
-  const url = `/api/adsblol?type=icao&ids=${icao24}`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const records = parseReadsbResponse(await res.json(), 'adsblol');
-  return records.length > 0 ? records[0] : null;
+  try {
+    const data = await adsbLolFetch('icao', icao24);
+    const records = parseReadsbResponse(data, 'adsblol');
+    return records.length > 0 ? records[0] : null;
+  } catch (err) {
+    console.warn(`[adsb.lol] fetchAdsbLol failed: ${err.message}`);
+    return null;
+  }
 }
 
 export async function fetchAdsbLolMultiple(icao24List) {
   if (icao24List.length === 0) return [];
-  const url = `/api/adsblol?type=icao&ids=${icao24List.join(',')}`;
   try {
-    const res = await fetch(url);
-    if (!res.ok) {
-      console.warn(`[adsb.lol] proxy returned ${res.status}`);
-      return [];
-    }
-    return parseReadsbResponse(await res.json(), 'adsblol');
+    const data = await adsbLolFetch('icao', icao24List.join(','));
+    return parseReadsbResponse(data, 'adsblol');
   } catch (err) {
-    console.warn(`[adsb.lol] fetch failed: ${err.message}`);
+    console.warn(`[adsb.lol] fetchAdsbLolMultiple failed: ${err.message}`);
     return [];
   }
 }
 
 export async function fetchAdsbLolByReg(registrations) {
   if (registrations.length === 0) return [];
-  const url = `/api/adsblol?type=reg&ids=${registrations.join(',')}`;
   try {
-    const res = await fetch(url);
-    if (!res.ok) {
-      console.warn(`[adsb.lol reg] proxy returned ${res.status}`);
-      return [];
-    }
-    return parseReadsbResponse(await res.json(), 'adsblol');
+    const data = await adsbLolFetch('reg', registrations.join(','));
+    return parseReadsbResponse(data, 'adsblol');
   } catch (err) {
-    console.warn(`[adsb.lol reg] fetch failed: ${err.message}`);
+    console.warn(`[adsb.lol reg] fetchAdsbLolByReg failed: ${err.message}`);
     return [];
   }
 }
